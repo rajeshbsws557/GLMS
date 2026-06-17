@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<!--
+============================================================================
+FILE: dashboard.html — Main Dashboard
+============================================================================
+
+Shows the user's loans split into two lists: "Money I'm Owed" and
+"Money I Owe". Includes summary stats at the top and modals for
+adding contacts, creating loans, and logging repayments.
+
+All data is loaded dynamically via JavaScript — the HTML is just the
+skeleton. app.js fills in loan cards after fetching from the PHP API.
+============================================================================
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bakir Khata — manage your loans and repayments.">
+    <title>Bakir Khata — Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/custom.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>$</text></svg>">
+</head>
+<body>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="toast-wrap"></div>
+
+    <!-- ====================================================================
+         HEADER
+         ==================================================================== -->
+    <header class="app-header">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+            <h1 class="text-lg font-bold tracking-tight">Bakir Khata</h1>
+            <div class="flex items-center gap-3">
+                <span id="display-user-name" class="text-sm header-user">User</span>
+                <button onclick="handleLogout()" class="btn btn-ghost btn-sm">Sign out</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6">
+
+        <!-- Loading spinner (hidden once data arrives) -->
+        <div id="loading-state" class="flex flex-col items-center py-20" style="color:var(--text-faint)">
+            <svg class="animate-spin mb-3" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.49-8.49l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83"/></svg>
+            <p>Loading your khata&hellip;</p>
+        </div>
+
+        <!-- ================================================================
+             MAIN CONTENT (hidden until data loads)
+             ================================================================ -->
+        <div id="main-content" style="display:none">
+
+            <!-- SUMMARY ROW -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+                <div class="card">
+                    <p class="stat-label">Total Lent</p>
+                    <p id="total-lent" class="stat-value" style="color:var(--green)">&#8377;0.00</p>
+                    <p id="lent-remaining" class="text-xs mt-0.5" style="color:var(--text-faint)">&#8377;0.00 outstanding</p>
+                </div>
+                <div class="card">
+                    <p class="stat-label">Total Borrowed</p>
+                    <p id="total-borrowed" class="stat-value" style="color:var(--red)">&#8377;0.00</p>
+                    <p id="borrowed-remaining" class="text-xs mt-0.5" style="color:var(--text-faint)">&#8377;0.00 outstanding</p>
+                </div>
+                <div class="card">
+                    <p class="stat-label">Net Balance</p>
+                    <p id="net-balance" class="stat-value">&#8377;0.00</p>
+                    <p id="net-label" class="text-xs mt-0.5" style="color:var(--text-faint)">All settled</p>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="openModal('modal-contact')" class="btn btn-outline btn-sm">+ Add Contact</button>
+                <button onclick="openModal('modal-loan')" class="btn btn-primary btn-sm">+ New Loan</button>
+            </div>
+
+            <!-- TWO-COLUMN LOAN LISTS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- Lent -->
+                <section>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h2 class="font-semibold text-base">Money I'm Owed</h2>
+                        <span id="lent-count" class="badge badge-settled" style="font-size:0.7rem">0</span>
+                    </div>
+                    <div id="loans-lent" class="space-y-3">
+                        <p class="empty-msg">No loans lent yet. Click "+ New Loan" to start.</p>
+                    </div>
+                </section>
+
+                <!-- Borrowed -->
+                <section>
+                    <div class="flex items-center gap-2 mb-3">
+                        <h2 class="font-semibold text-base">Money I Owe</h2>
+                        <span id="borrowed-count" class="badge badge-unpaid" style="font-size:0.7rem">0</span>
+                    </div>
+                    <div id="loans-borrowed" class="space-y-3">
+                        <p class="empty-msg">No borrowed loans yet. Click "+ New Loan" to start.</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- ====================================================================
+         MODAL: Add Contact
+         ==================================================================== -->
+    <div id="modal-contact" class="modal-overlay" onclick="handleOverlayClick(event,'modal-contact')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">Add Contact</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-contact')">&times;</button>
+            </div>
+            <form id="form-add-contact" onsubmit="return handleAddContact(event)">
+                <div class="mb-4">
+                    <label for="contact-name" class="form-label">Name *</label>
+                    <input type="text" id="contact-name" class="form-input" placeholder="e.g. Jane Doe" required>
+                </div>
+                <div class="mb-5">
+                    <label for="contact-phone" class="form-label">Phone (optional)</label>
+                    <input type="tel" id="contact-phone" class="form-input" placeholder="e.g. +91-9876543210">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">Save</button>
+                    <button type="button" onclick="closeModal('modal-contact')" class="btn btn-outline flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL: Add Loan
+         ==================================================================== -->
+    <div id="modal-loan" class="modal-overlay" onclick="handleOverlayClick(event,'modal-loan')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">New Loan</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-loan')">&times;</button>
+            </div>
+            <form id="form-add-loan" onsubmit="return handleAddLoan(event)">
+                <div class="mb-4">
+                    <label for="loan-contact" class="form-label">Contact *</label>
+                    <select id="loan-contact" class="form-input" required>
+                        <option value="">Choose a contact&hellip;</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="loan-type" class="form-label">Type *</label>
+                    <select id="loan-type" class="form-input" required>
+                        <option value="">Select&hellip;</option>
+                        <option value="Lent">I lent them money (they owe me)</option>
+                        <option value="Borrowed">I borrowed money (I owe them)</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label for="loan-amount" class="form-label">Amount (&#8377;) *</label>
+                    <input type="number" id="loan-amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                        <label for="loan-date" class="form-label">Loan Date *</label>
+                        <input type="date" id="loan-date" class="form-input" required>
+                    </div>
+                    <div>
+                        <label for="loan-due-date" class="form-label">Due Date</label>
+                        <input type="date" id="loan-due-date" class="form-input">
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <label for="loan-notes" class="form-label">Notes</label>
+                    <input type="text" id="loan-notes" class="form-input" placeholder="e.g. For textbooks">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">Create</button>
+                    <button type="button" onclick="closeModal('modal-loan')" class="btn btn-outline flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL: Log Repayment
+         ==================================================================== -->
+    <div id="modal-repayment" class="modal-overlay" onclick="handleOverlayClick(event,'modal-repayment')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">Log Repayment</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-repayment')">&times;</button>
+            </div>
+
+            <!-- Loan summary (filled by JS) -->
+            <div id="repayment-loan-info" class="card mb-4" style="padding:0.85rem">
+                <p id="repayment-contact" class="font-medium text-sm"></p>
+                <div class="flex justify-between text-xs mt-1" style="color:var(--text-dim)">
+                    <span>Loan amount</span>
+                    <span id="repayment-amount"></span>
+                </div>
+                <div class="flex justify-between text-xs" style="color:var(--text-dim)">
+                    <span>Remaining</span>
+                    <span id="repayment-remaining" style="color:var(--red)"></span>
+                </div>
+            </div>
+
+            <form id="form-repayment" onsubmit="return handleAddRepayment(event)">
+                <input type="hidden" id="repayment-loan-id">
+                <div class="mb-5">
+                    <label for="repayment-pay-amount" class="form-label">Payment Amount (&#8377;) *</label>
+                    <input type="number" id="repayment-pay-amount" class="form-input" placeholder="0.00" step="0.01" min="0.01" required>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">Log Payment</button>
+                    <button type="button" onclick="closeModal('modal-repayment')" class="btn btn-outline flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         MODAL: Repayment History
+         ==================================================================== -->
+    <div id="modal-history" class="modal-overlay" onclick="handleOverlayClick(event,'modal-history')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">Repayment History</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-history')">&times;</button>
+            </div>
+            <div id="repayment-history-content"></div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

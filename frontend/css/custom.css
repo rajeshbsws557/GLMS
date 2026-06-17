@@ -1,0 +1,347 @@
+/* ============================================================================
+   custom.css — Bakir Khata (Green + White Theme)
+   ============================================================================
+   Light theme with green accents. Uses Inter for body text.
+   Tailwind handles layout; this file covers components and tokens.
+   ============================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ---------- design tokens ---------- */
+:root {
+    --bg-body: #f5f7f5;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f9fdf9;
+    --bg-input: #f3f6f3;
+    --border: #d6ddd6;
+    --border-focus: #16a34a;
+    --accent: #16a34a;
+    --accent-hover: #15803d;
+    --accent-light: #dcfce7;
+    --text-main: #1a2e1a;
+    --text-dim: #4d664d;
+    --text-faint: #7a917a;
+    --green: #16a34a;
+    --green-dark: #15803d;
+    --red: #dc2626;
+    --amber: #d97706;
+    --white: #ffffff;
+}
+
+/* ---------- reset / base ---------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg-body);
+    color: var(--text-main);
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* ---------- form controls ---------- */
+.form-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+}
+
+.form-input {
+    width: 100%;
+    padding: 0.65rem 0.85rem;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    color: var(--text-main);
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+.form-input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.12);
+}
+.form-input::placeholder { color: var(--text-faint); }
+
+select.form-input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%234d664d' stroke-width='2'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    padding-right: 2.2rem;
+}
+select.form-input option {
+    background: var(--white);
+    color: var(--text-main);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: 0.5rem;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--white);
+    border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-outline {
+    background: var(--white);
+    color: var(--text-dim);
+    border-color: var(--border);
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    padding: 0.4rem 0.7rem;
+}
+.btn-ghost:hover { color: var(--accent); background: var(--accent-light); }
+
+.btn-sm {
+    font-size: 0.78rem;
+    padding: 0.35rem 0.75rem;
+}
+
+/* ---------- cards ---------- */
+.card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    padding: 1.1rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+    border-color: #b8ccb8;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* ---------- header ---------- */
+.app-header {
+    background: var(--accent);
+    color: var(--white);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.app-header .header-user { color: rgba(255,255,255,0.8); }
+.app-header .btn-ghost {
+    color: rgba(255,255,255,0.85);
+}
+.app-header .btn-ghost:hover {
+    color: var(--white);
+    background: rgba(255,255,255,0.12);
+}
+
+/* ---------- auth page ---------- */
+.auth-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f5f7f5 100%);
+}
+
+.auth-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 2.2rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+}
+
+.auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+}
+
+.auth-tab {
+    flex: 1;
+    padding: 0.6rem 0;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-faint);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+.auth-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+}
+.auth-tab:hover:not(.active) { color: var(--text-dim); }
+
+/* ---------- modal ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+.modal-overlay.active { opacity: 1; visibility: visible; }
+
+.modal-box {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+    width: 90%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: translateY(12px);
+    transition: transform 0.2s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+.modal-overlay.active .modal-box { transform: translateY(0); }
+
+/* ---------- status badges ---------- */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 99px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.badge-unpaid  { background: #fef2f2; color: #dc2626; }
+.badge-partial { background: #fffbeb; color: #d97706; }
+.badge-settled { background: #f0fdf4; color: #16a34a; }
+
+/* ---------- progress bar ---------- */
+.progress-track {
+    width: 100%;
+    height: 4px;
+    background: #e8ece8;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width 0.4s ease;
+}
+
+/* ---------- loan card accent stripe ---------- */
+.loan-card { position: relative; padding-left: 1.35rem; }
+.loan-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px;
+}
+.loan-card.type-lent::before     { background: var(--green); }
+.loan-card.type-borrowed::before { background: var(--red); }
+
+/* ---------- summary stat ---------- */
+.stat-value { font-size: 1.65rem; font-weight: 700; line-height: 1.2; }
+.stat-label { font-size: 0.78rem; color: var(--text-dim); }
+
+/* ---------- toast ---------- */
+.toast-wrap {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.toast-item {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    min-width: 260px;
+    max-width: 380px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    animation: slideIn 0.25s ease;
+}
+.toast-item.toast-success { border-left: 3px solid var(--green); }
+.toast-item.toast-error   { border-left: 3px solid var(--red); }
+.toast-item.toast-info    { border-left: 3px solid var(--accent); }
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(40px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to   { opacity: 0; transform: translateX(40px); }
+}
+
+/* ---------- misc ---------- */
+.divider { border-top: 1px solid var(--border); }
+
+.empty-msg {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--text-faint);
+    font-size: 0.88rem;
+}
+
+.repayment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #eef2ee;
+    font-size: 0.83rem;
+}
+.repayment-row:last-child { border-bottom: none; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+    .auth-box { padding: 1.5rem; }
+    .modal-box { padding: 1.25rem; width: 95%; }
+}

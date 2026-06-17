@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<!--
+============================================================================
+FILE: index.html — Login & Registration Page
+============================================================================
+
+PURPOSE:
+Entry point of the application. Provides login and registration forms
+inside a centered card. Users authenticate here before accessing the
+dashboard.
+
+TECHNOLOGIES:
+- Tailwind CSS v3 (CDN) — utility classes for spacing, flex, typography
+- custom.css — green+white theme variables, form controls, auth-specific styles
+- auth.js — form handling (fetch + localStorage)
+- config.js — API base URL
+
+VIVA NOTE:
+Both login and registration live on the same page, toggled by JS. This
+avoids a full page reload and gives a smoother experience.
+============================================================================
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bakir Khata — Track money lent and borrowed with friends and family.">
+    <title>Bakir Khata — Sign In</title>
+
+    <!-- Tailwind CSS (Play CDN — runtime, fine for demos) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom green+white theme + components -->
+    <link rel="stylesheet" href="css/custom.css">
+    <!-- Simple text favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>$</text></svg>">
+</head>
+<body>
+
+    <!-- Toast container (populated by JS) -->
+    <div id="toast-container" class="toast-wrap"></div>
+
+    <!-- Centered auth card -->
+    <div class="auth-wrapper">
+        <div class="auth-box">
+
+            <!-- Heading -->
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold tracking-tight" style="color:var(--accent)">Bakir Khata</h1>
+                <p class="text-sm mt-1" style="color:var(--text-dim)">
+                    Track what you owe &amp; what you're owed
+                </p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">
+                    Sign In
+                </button>
+                <button id="tab-register" class="auth-tab" onclick="switchTab('register')">
+                    Create Account
+                </button>
+            </div>
+
+            <!-- ============================================================
+                 LOGIN FORM
+                 ============================================================
+                 onsubmit="return handleLogin(event)" calls our JS handler
+                 and prevents the default page-reloading form submission.
+                 
+                 Each input uses:
+                 - id: so JS can grab the value with getElementById
+                 - type: tells the browser what data to expect
+                 - required: HTML5 validation gate
+                 - autocomplete: lets the browser suggest saved credentials
+                 ============================================================ -->
+            <form id="form-login" onsubmit="return handleLogin(event)">
+                <div class="mb-4">
+                    <label for="login-email" class="form-label">Email</label>
+                    <input
+                        type="email"
+                        id="login-email"
+                        class="form-input"
+                        placeholder="you@example.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+                <div class="mb-5">
+                    <label for="login-password" class="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="login-password"
+                        class="form-input"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+                <button type="submit" id="btn-login" class="btn btn-primary w-full">
+                    Sign In
+                </button>
+            </form>
+
+            <!-- ============================================================
+                 REGISTRATION FORM (hidden by default)
+                 ============================================================ -->
+            <form id="form-register" style="display:none" onsubmit="return handleRegister(event)">
+                <div class="mb-4">
+                    <label for="reg-name" class="form-label">Full Name</label>
+                    <input
+                        type="text"
+                        id="reg-name"
+                        class="form-input"
+                        placeholder="John Doe"
+                        required
+                        autocomplete="name"
+                    >
+                </div>
+                <div class="mb-4">
+                    <label for="reg-email" class="form-label">Email</label>
+                    <input
+                        type="email"
+                        id="reg-email"
+                        class="form-input"
+                        placeholder="you@example.com"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+                <div class="mb-4">
+                    <label for="reg-password" class="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="reg-password"
+                        class="form-input"
+                        placeholder="At least 6 characters"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                </div>
+                <div class="mb-5">
+                    <label for="reg-confirm" class="form-label">Confirm Password</label>
+                    <input
+                        type="password"
+                        id="reg-confirm"
+                        class="form-input"
+                        placeholder="Repeat password"
+                        required
+                        minlength="6"
+                        autocomplete="new-password"
+                    >
+                </div>
+                <button type="submit" id="btn-register" class="btn btn-primary w-full">
+                    Create Account
+                </button>
+            </form>
+
+            <p class="text-center text-xs mt-5" style="color:var(--text-faint)">
+                DBMS Mini-Project &middot; Bakir Khata
+            </p>
+        </div>
+    </div>
+
+    <!-- JS: config first (defines API_BASE_URL), then auth logic -->
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 
 A full-stack web application for tracking informal loans between friends and family. Record money you've lent or borrowed, log partial repayments, and see your net balance at a glance — all in a clean, mobile-friendly dashboard.
 
-> **Bakir Khata** (बकीर खाता) loosely translates to a "credit ledger" — the digital equivalent of the classic notebook people use to keep track of who owes whom.
+> **Bakir Khata** loosely translates to a "credit ledger" — the digital equivalent of the classic notebook people use to keep track of who owes whom.
 
 ---
 

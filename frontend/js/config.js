@@ -1,43 +1,43 @@
 /**
  * ============================================================================
- * FILE: config.js — API Configuration
+ * ফাইল: config.js — API কনফিগারেশন
  * ============================================================================
  * 
- * PURPOSE:
- * Centralizes the backend API base URL in a single place. Every JavaScript
- * file imports this constant instead of hardcoding the URL. This way, when
- * you deploy to a different server (or switch from local to Azure), you only
- * change ONE line of code.
+ * উদ্দেশ্য:
+ * ব্যাকএন্ড API-র বেস URL একটি জায়গায় কেন্দ্রীভূত রাখে। প্রতিটি JavaScript
+ * ফাইল URL হার্ডকোড না করে এই constant ব্যবহার করে। এভাবে, যখন আপনি
+ * ভিন্ন সার্ভারে ডিপ্লয় করেন (বা লোকাল থেকে Azure-এ যান), তখন শুধু
+ * একটি লাইন পরিবর্তন করতে হয়।
  * 
- * WHY IS THIS IMPORTANT?
- * Without a centralized config, if the backend URL appears in 20 different
- * fetch() calls across multiple files, you'd need to update all 20 when
- * the server changes. With this config, you update one line. This follows
- * the DRY principle (Don't Repeat Yourself).
+ * এটি কেন গুরুত্বপূর্ণ?
+ * কেন্দ্রীভূত config ছাড়া, যদি ব্যাকএন্ড URL ২০টি ভিন্ন fetch() কলে
+ * থাকে, তাহলে সার্ভার পরিবর্তন হলে ২০টি জায়গায় আপডেট করতে হতো।
+ * এই config দিয়ে একটি লাইন আপডেট করলেই হয়। এটি DRY নীতি
+ * (Don't Repeat Yourself) অনুসরণ করে।
  * 
- * INSTRUCTIONS:
- * Replace the URL below with your actual Azure VPS backend URL.
- * Make sure it ends with a trailing slash ("/").
+ * নির্দেশনা:
+ * নিচের URL-টি আপনার আসল Java ব্যাকএন্ড URL দিয়ে প্রতিস্থাপন করুন।
+ * শেষে trailing slash ("/") থাকা নিশ্চিত করুন।
  * 
- * VIVA NOTE:
- * This is a simple but important software engineering practice. In larger
- * applications, you'd use environment variables (e.g., .env files) managed
- * by build tools like Vite or Webpack. For this vanilla JS project, a
- * separate config file achieves the same goal.
+ * ভাইভা নোট:
+ * এটি একটি সাধারণ কিন্তু গুরুত্বপূর্ণ সফটওয়্যার ইঞ্জিনিয়ারিং অভ্যাস।
+ * বড় অ্যাপ্লিকেশনে environment variable (.env ফাইল) ব্যবহার করা হয়
+ * যা Vite বা Webpack-এর মতো বিল্ড টুল দিয়ে পরিচালিত হয়। এই vanilla
+ * JS প্রজেক্টে একটি আলাদা config ফাইল একই উদ্দেশ্য পূরণ করে।
  * 
  * ============================================================================
  */
 
 // ============================================================================
-// BACKEND API BASE URL
+// ব্যাকএন্ড API বেস URL
 // ============================================================================
-// Change this to match your Azure VPS PHP backend address.
-// Examples:
-//   Local development:  'http://localhost/GLMS/backend/'
-//   Azure VPS:          'https://your-azure-vps.com/backend/'
+// আপনার Java ব্যাকএন্ড সার্ভারের ঠিকানা অনুযায়ী পরিবর্তন করুন।
+// উদাহরণ:
+//   লোকাল ডেভেলপমেন্ট (Java):  'http://localhost:8080/api/'
+//   Azure VPS:                   'https://your-azure-vps.com/api/'
 //
-// The trailing slash is important! Without it, URLs like:
-//   API_BASE_URL + 'auth.php' would become 'http://localhostauth.php'
-//   instead of 'http://localhost/auth.php'
+// শেষের slash গুরুত্বপূর্ণ! এটি ছাড়া URL এভাবে হবে:
+//   API_BASE_URL + 'auth' → 'http://localhost:8080auth' (ভুল!)
+//   সঠিক: 'http://localhost:8080/api/' + 'auth' → 'http://localhost:8080/api/auth'
 // ============================================================================
-const API_BASE_URL = 'http://localhost/GLMS/backend/';
+const API_BASE_URL = 'http://localhost:8080/api/';

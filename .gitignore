@@ -12,7 +12,8 @@ desktop.ini
 
 # Dependencies
 node_modules/
-vendor/
+target/
+*.class
 
 # Environment
 .env

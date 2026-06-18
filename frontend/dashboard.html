@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <!--
 ============================================================================
-FILE: dashboard.html — Main Dashboard
+ফাইল: dashboard.html — মূল ড্যাশবোর্ড
 ============================================================================
 
-Shows the user's loans split into two lists: "Money I'm Owed" and
-"Money I Owe". Includes summary stats at the top and modals for
-adding contacts, creating loans, and logging repayments.
+ব্যবহারকারীর ঋণগুলো দুটি তালিকায় ভাগ করে দেখায়: "আমার পাওনা" এবং
+"আমার দেনা"। উপরে সারসংক্ষেপ পরিসংখ্যান এবং contact যোগ, ঋণ তৈরি,
+ও পরিশোধ রেকর্ড করার জন্য modal আছে।
 
-All data is loaded dynamically via JavaScript — the HTML is just the
-skeleton. app.js fills in loan cards after fetching from the PHP API.
+সব ডেটা JavaScript দিয়ে গতিশীলভাবে লোড হয় — HTML শুধু কাঠামো।
+app.js API থেকে ডেটা আনার পর ঋণ কার্ডগুলো পূরণ করে।
 ============================================================================
 -->
 <html lang="en">
@@ -24,11 +24,11 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
 </head>
 <body>
 
-    <!-- Toasts -->
+    <!-- টোস্ট -->
     <div id="toast-container" class="toast-wrap"></div>
 
     <!-- ====================================================================
-         HEADER
+         হেডার
          ==================================================================== -->
     <header class="app-header">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -42,18 +42,18 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
 
     <main class="max-w-6xl mx-auto px-4 py-6">
 
-        <!-- Loading spinner (hidden once data arrives) -->
+        <!-- লোডিং স্পিনার (ডেটা আসলে লুকিয়ে যায়) -->
         <div id="loading-state" class="flex flex-col items-center py-20" style="color:var(--text-faint)">
             <svg class="animate-spin mb-3" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.49-8.49l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83"/></svg>
             <p>Loading your khata&hellip;</p>
         </div>
 
         <!-- ================================================================
-             MAIN CONTENT (hidden until data loads)
+             মূল বিষয়বস্তু (ডেটা লোড না হওয়া পর্যন্ত লুকানো)
              ================================================================ -->
         <div id="main-content" style="display:none">
 
-            <!-- SUMMARY ROW -->
+            <!-- সারসংক্ষেপ সারি -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                 <div class="card">
                     <p class="stat-label">Total Lent</p>
@@ -72,16 +72,16 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
+            <!-- অ্যাকশন বোতাম -->
             <div class="flex flex-wrap gap-2 mb-6">
                 <button onclick="openModal('modal-contact')" class="btn btn-outline btn-sm">+ Add Contact</button>
                 <button onclick="openModal('modal-loan')" class="btn btn-primary btn-sm">+ New Loan</button>
             </div>
 
-            <!-- TWO-COLUMN LOAN LISTS -->
+            <!-- দুই-কলাম ঋণ তালিকা -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <!-- Lent -->
+                <!-- ধার দেওয়া (Lent) -->
                 <section>
                     <div class="flex items-center gap-2 mb-3">
                         <h2 class="font-semibold text-base">Money I'm Owed</h2>
@@ -92,7 +92,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
                     </div>
                 </section>
 
-                <!-- Borrowed -->
+                <!-- ধার নেওয়া (Borrowed) -->
                 <section>
                     <div class="flex items-center gap-2 mb-3">
                         <h2 class="font-semibold text-base">Money I Owe</h2>
@@ -107,7 +107,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
     </main>
 
     <!-- ====================================================================
-         MODAL: Add Contact
+         মোডাল: Contact যোগ করুন
          ==================================================================== -->
     <div id="modal-contact" class="modal-overlay" onclick="handleOverlayClick(event,'modal-contact')">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -133,7 +133,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
     </div>
 
     <!-- ====================================================================
-         MODAL: Add Loan
+         মোডাল: নতুন ঋণ তৈরি
          ==================================================================== -->
     <div id="modal-loan" class="modal-overlay" onclick="handleOverlayClick(event,'modal-loan')">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -183,7 +183,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
     </div>
 
     <!-- ====================================================================
-         MODAL: Log Repayment
+         মোডাল: পরিশোধ রেকর্ড
          ==================================================================== -->
     <div id="modal-repayment" class="modal-overlay" onclick="handleOverlayClick(event,'modal-repayment')">
         <div class="modal-box" onclick="event.stopPropagation()">
@@ -192,7 +192,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
                 <button class="btn-ghost btn-sm" onclick="closeModal('modal-repayment')">&times;</button>
             </div>
 
-            <!-- Loan summary (filled by JS) -->
+            <!-- ঋণের সারসংক্ষেপ (JS দ্বারা পূরণ হয়) -->
             <div id="repayment-loan-info" class="card mb-4" style="padding:0.85rem">
                 <p id="repayment-contact" class="font-medium text-sm"></p>
                 <div class="flex justify-between text-xs mt-1" style="color:var(--text-dim)">
@@ -220,7 +220,7 @@ skeleton. app.js fills in loan cards after fetching from the PHP API.
     </div>
 
     <!-- ====================================================================
-         MODAL: Repayment History
+         মোডাল: পরিশোধ ইতিহাস
          ==================================================================== -->
     <div id="modal-history" class="modal-overlay" onclick="handleOverlayClick(event,'modal-history')">
         <div class="modal-box" onclick="event.stopPropagation()">

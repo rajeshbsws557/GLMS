@@ -1,213 +1,207 @@
 -- ============================================================================
--- PERSONAL IOU LEDGER — DATABASE SCHEMA
+-- ব্যক্তিগত ধার-পাওনা লেজার — ডাটাবেস স্কিমা
 -- ============================================================================
 -- 
--- PURPOSE:
--- This SQL script creates the entire database schema for the Personal IOU
--- Ledger application. It defines four tables that work together to track
--- informal loans between a user and their friends/family.
+-- উদ্দেশ্য:
+-- এই SQL স্ক্রিপ্টটি ব্যক্তিগত ধার-পাওনা লেজার অ্যাপ্লিকেশনের সম্পূর্ণ ডাটাবেস
+-- স্কিমা তৈরি করে। এটি ৪টি টেবিল সংজ্ঞায়িত করে যা একসাথে কাজ করে একজন
+-- ব্যবহারকারী এবং তাদের বন্ধু/পরিবারের মধ্যে অনানুষ্ঠানিক ঋণের হিসাব রাখে।
 --
--- HOW TO RUN:
--- Execute this script in your MySQL client (e.g., MySQL Workbench, phpMyAdmin,
--- or the command line) to set up the database from scratch.
+-- কীভাবে চালাবেন:
+-- এই স্ক্রিপ্টটি আপনার MySQL ক্লায়েন্টে চালান (যেমন: MySQL Workbench, phpMyAdmin,
+-- বা কমান্ড লাইন) ডাটাবেস সেট আপ করার জন্য।
 --
--- RELATIONSHIP MAP (Entity-Relationship Summary):
---   users (1) ──── (N) contacts    → A user can have many contacts
---   users (1) ──── (N) loans       → A user can have many loans
---   contacts (1) ── (N) loans      → A contact can be linked to many loans
---   loans (1) ──── (N) repayments  → A loan can have many partial repayments
+-- সম্পর্ক মানচিত্র (এনটিটি-রিলেশনশিপ সারসংক্ষেপ):
+--   users (1) ──── (N) contacts    → একজন ব্যবহারকারীর অনেক কন্টাক্ট থাকতে পারে
+--   users (1) ──── (N) loans       → একজন ব্যবহারকারীর অনেক লোন থাকতে পারে
+--   contacts (1) ── (N) loans      → একটি কন্টাক্ট অনেক লোনের সাথে যুক্ত থাকতে পারে
+--   loans (1) ──── (N) repayments  → একটি লোনের অনেক আংশিক পরিশোধ থাকতে পারে
 --
--- KEY CONCEPTS FOR VIVA:
--- 1. PRIMARY KEY: Uniquely identifies each row in a table. Auto-incremented
---    here so the database assigns the next integer automatically.
--- 2. FOREIGN KEY: Creates a link between two tables, enforcing referential
---    integrity (you can't create a loan for a non-existent user).
--- 3. ON DELETE CASCADE: When a parent row is deleted, all child rows that
---    reference it are automatically deleted too. This prevents orphan records.
--- 4. ENUM: A string data type that restricts values to a predefined list.
---    Useful for columns like 'status' where only specific values are valid.
+-- ভাইভার জন্য মূল ধারণা:
+-- ১. PRIMARY KEY (প্রাইমারি কি): একটি টেবিলের প্রতিটি সারিকে অনন্যভাবে শনাক্ত করে।
+--    এখানে Auto-incremented তাই ডাটাবেস স্বয়ংক্রিয়ভাবে পরবর্তী ইন্টিজার অ্যাসাইন করে।
+-- ২. FOREIGN KEY (ফরেন কি): দুটি টেবিলের মধ্যে একটি লিঙ্ক তৈরি করে, রেফারেনশিয়াল
+--    অখণ্ডতা প্রয়োগ করে (অস্তিত্বহীন ব্যবহারকারীর জন্য লোন তৈরি করা যাবে না)।
+-- ৩. ON DELETE CASCADE: যখন প্যারেন্ট সারি মুছে ফেলা হয়, তখন এর রেফারেন্স করা
+--    সব চাইল্ড সারি স্বয়ংক্রিয়ভাবে মুছে যায়। এটি অরফান রেকর্ড প্রতিরোধ করে।
+-- ৪. ENUM: একটি স্ট্রিং ডেটা টাইপ যা মানগুলোকে একটি পূর্বনির্ধারিত তালিকায় সীমাবদ্ধ করে।
+--    'status' এর মতো কলামের জন্য দরকারী যেখানে শুধুমাত্র নির্দিষ্ট মানগুলো বৈধ।
 -- ============================================================================
 
 
 -- ============================================================================
--- STEP 1: CREATE THE DATABASE
+-- ধাপ ১: ডাটাবেস তৈরি করা
 -- ============================================================================
--- `CREATE DATABASE IF NOT EXISTS` is a safe command — it only creates the
--- database if it doesn't already exist. This prevents errors when re-running
--- the script on a server that already has the database.
+-- `CREATE DATABASE IF NOT EXISTS` একটি নিরাপদ কমান্ড — এটি শুধুমাত্র ডাটাবেস তৈরি করে
+-- যদি এটি আগে থেকে না থাকে। যে সার্ভারে ডাটাবেসটি ইতিমধ্যে আছে সেখানে স্ক্রিপ্টটি
+-- পুনরায় চালানোর সময় এটি ত্রুটি প্রতিরোধ করে।
 -- ============================================================================
 CREATE DATABASE IF NOT EXISTS personal_ledger;
 
--- `USE` tells MySQL that all subsequent commands in this script should be
--- executed inside the `personal_ledger` database.
+-- `USE` MySQL-কে বলে দেয় যে এই স্ক্রিপ্টের পরবর্তী সমস্ত কমান্ড
+-- `personal_ledger` ডাটাবেসের ভিতরে কার্যকর করা উচিত।
 USE personal_ledger;
 
 
 -- ============================================================================
--- TABLE 1: users
+-- টেবিল ১: users
 -- ============================================================================
--- PURPOSE: Stores the registered users of the application. Each user has a
--- unique account identified by their email address.
+-- উদ্দেশ্য: অ্যাপ্লিকেশনের নিবন্ধিত ব্যবহারকারীদের সংরক্ষণ করে। প্রতিটি ব্যবহারকারীর
+-- তাদের ইমেল ঠিকানা দ্বারা চিহ্নিত একটি অনন্য অ্যাকাউন্ট রয়েছে।
 --
--- VIVA NOTES:
--- - `INT AUTO_INCREMENT PRIMARY KEY`: The `user_id` column is an integer that
---   automatically increases by 1 for each new user. It serves as the PRIMARY
---   KEY, meaning it uniquely identifies every row in this table.
--- - `VARCHAR(100)`: A variable-length string that can hold UP TO 100
---   characters. Unlike `CHAR(100)` which always uses 100 bytes, VARCHAR only
---   uses as much storage as the actual string length + 1-2 bytes overhead.
---   This is more storage-efficient for names and emails.
--- - `UNIQUE`: The `email` column has a UNIQUE constraint, meaning no two
---   users can register with the same email. The database will reject any
---   INSERT that would create a duplicate.
--- - `NOT NULL`: These columns MUST have a value. The database will reject
---   any INSERT that leaves these columns empty.
--- - `password_hash VARCHAR(255)`: We store a HASHED version of the password,
---   NEVER the plaintext password. The PHP function `password_hash()` produces
---   a 60-character bcrypt string, but we use VARCHAR(255) for future-proofing
---   in case the hashing algorithm changes to produce longer hashes.
--- - `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`: Automatically records the exact
---   date and time when the row was created. Useful for auditing.
+-- ভাইভা নোট:
+-- - `INT AUTO_INCREMENT PRIMARY KEY`: `user_id` কলামটি একটি ইন্টিজার যা
+--   প্রতিটি নতুন ব্যবহারকারীর জন্য স্বয়ংক্রিয়ভাবে ১ বৃদ্ধি পায়। এটি PRIMARY
+--   KEY হিসেবে কাজ করে, যার অর্থ এটি এই টেবিলের প্রতিটি সারিকে অনন্যভাবে শনাক্ত করে।
+-- - `VARCHAR(100)`: একটি পরিবর্তনশীল-দৈর্ঘ্যের স্ট্রিং যা ১০০ ক্যারেক্টার পর্যন্ত
+--   ধারণ করতে পারে। `CHAR(100)` এর বিপরীতে যা সর্বদা ১০০ বাইট ব্যবহার করে, VARCHAR
+--   শুধুমাত্র স্ট্রিংয়ের প্রকৃত দৈর্ঘ্য + ১-২ বাইট ওভারহেড ব্যবহার করে। নাম এবং
+--   ইমেলের জন্য এটি স্টোরেজ-সাশ্রয়ী।
+-- - `UNIQUE`: `email` কলামের একটি UNIQUE কনস্ট্রেইন্ট আছে, যার মানে কোনো দুই
+--   ব্যবহারকারী একই ইমেল দিয়ে নিবন্ধন করতে পারবে না। ডাটাবেস ডুপ্লিকেট তৈরি করে
+--   এমন যেকোনো INSERT প্রত্যাখ্যান করবে।
+-- - `NOT NULL`: এই কলামগুলোর একটি মান থাকতে হবে। ডাটাবেস এমন যেকোনো INSERT
+--   প্রত্যাখ্যান করবে যা এই কলামগুলো ফাঁকা রাখে।
+-- - `password_hash VARCHAR(255)`: আমরা পাসওয়ার্ডের একটি হ্যাশ করা (HASHED) সংস্করণ
+--   সংরক্ষণ করি, কখনই প্লেইনটেক্সট পাসওয়ার্ড নয়। BCrypt একটি ৬০-ক্যারেক্টারের হ্যাশ
+--   তৈরি করে, কিন্তু যদি হ্যাশিং অ্যালগরিদম দীর্ঘ হ্যাশ তৈরি করতে পরিবর্তিত হয় তবে
+--   ভবিষ্যতের সুরক্ষার জন্য আমরা VARCHAR(255) ব্যবহার করি।
+-- - `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`: সারিটি কখন তৈরি হয়েছিল সেই সঠিক
+--   তারিখ এবং সময় স্বয়ংক্রিয়ভাবে রেকর্ড করে। অডিটিংয়ের জন্য দরকারী।
 -- ============================================================================
 CREATE TABLE users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,       -- Unique identifier for each user
-    full_name VARCHAR(100) NOT NULL,              -- User's display name
-    email VARCHAR(100) UNIQUE NOT NULL,           -- Login credential; must be unique
-    password_hash VARCHAR(255) NOT NULL,          -- Bcrypt hash of the user's password
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Auto-set when user registers
+    user_id INT AUTO_INCREMENT PRIMARY KEY,       -- প্রতিটি ব্যবহারকারীর জন্য অনন্য শনাক্তকারী
+    full_name VARCHAR(100) NOT NULL,              -- ব্যবহারকারীর প্রদর্শনের নাম
+    email VARCHAR(100) UNIQUE NOT NULL,           -- লগইন ক্রেডেনশিয়াল; অনন্য হতে হবে
+    password_hash VARCHAR(255) NOT NULL,          -- ব্যবহারকারীর পাসওয়ার্ডের Bcrypt হ্যাশ
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- ব্যবহারকারী নিবন্ধন করার সময় স্বয়ংক্রিয়ভাবে সেট হয়
 );
 
 
 -- ============================================================================
--- TABLE 2: contacts
+-- টেবিল ২: contacts
 -- ============================================================================
--- PURPOSE: Stores the friends/family members that a user lends money to or
--- borrows money from. Each contact belongs to exactly one user.
+-- উদ্দেশ্য: ব্যবহারকারী যাদের অর্থ ধার দেন বা যাদের কাছ থেকে ধার নেন সেই বন্ধু/পরিবারের
+-- সদস্যদের সংরক্ষণ করে। প্রতিটি কন্টাক্ট ঠিক একজন ব্যবহারকারীর অন্তর্গত।
 --
--- VIVA NOTES:
--- - This table has a FOREIGN KEY (`user_id`) that references the `users`
---   table. This establishes a one-to-many relationship: one user can have
---   many contacts.
--- - `ON DELETE CASCADE`: If a user deletes their account (row is removed from
---   `users`), ALL of their contacts are automatically deleted too. Without
---   CASCADE, the database would refuse to delete the user because child
---   rows (contacts) still reference them — this is called a "foreign key
---   constraint violation."
--- - `phone_number VARCHAR(15)`: Optional field (no NOT NULL constraint).
---   VARCHAR(15) accommodates international phone numbers including country
---   codes (e.g., +91-9876543210 = 14 characters).
+-- ভাইভা নোট:
+-- - এই টেবিলের একটি FOREIGN KEY (`user_id`) আছে যা `users` টেবিলকে রেফারেন্স করে।
+--   এটি একটি এক-থেকে-অনেক সম্পর্ক স্থাপন করে: একজন ব্যবহারকারীর অনেক কন্টাক্ট থাকতে পারে।
+-- - `ON DELETE CASCADE`: ব্যবহারকারী যদি তাদের অ্যাকাউন্ট মুছে ফেলে (`users` থেকে সারি সরানো হয়),
+--   তাদের সমস্ত কন্টাক্টও স্বয়ংক্রিয়ভাবে মুছে যাবে। CASCADE ছাড়া, ডাটাবেস ব্যবহারকারীকে
+--   মুছে ফেলতে অস্বীকার করবে কারণ চাইল্ড সারি (contacts) এখনও তাদের উল্লেখ করে — একে
+--   বলা হয় "foreign key constraint violation."
+-- - `phone_number VARCHAR(15)`: ঐচ্ছিক ক্ষেত্র (কোনো NOT NULL কনস্ট্রেইন্ট নেই)।
+--   VARCHAR(15) দেশের কোড সহ আন্তর্জাতিক ফোন নম্বর সামঞ্জস্য করতে পারে
+--   (যেমন, +91-9876543210 = ১৪ ক্যারেক্টার)।
 -- ============================================================================
 CREATE TABLE contacts (
-    contact_id INT AUTO_INCREMENT PRIMARY KEY,    -- Unique identifier for each contact
-    user_id INT NOT NULL,                         -- Which user this contact belongs to
-    contact_name VARCHAR(100) NOT NULL,           -- Name of the friend/family member
-    phone_number VARCHAR(15),                     -- Optional phone number
+    contact_id INT AUTO_INCREMENT PRIMARY KEY,    -- প্রতিটি কন্টাক্টের জন্য অনন্য শনাক্তকারী
+    user_id INT NOT NULL,                         -- এই কন্টাক্টটি কোন ব্যবহারকারীর
+    contact_name VARCHAR(100) NOT NULL,           -- বন্ধু/পরিবারের সদস্যের নাম
+    phone_number VARCHAR(15),                     -- ঐচ্ছিক ফোন নম্বর
 
-    -- FOREIGN KEY CONSTRAINT:
-    -- This ensures that `user_id` in this table MUST match an existing
-    -- `user_id` in the `users` table. You cannot add a contact for a
-    -- user that doesn't exist.
+    -- FOREIGN KEY কনস্ট্রেইন্ট:
+    -- এটি নিশ্চিত করে যে এই টেবিলে `user_id` অবশ্যই `users` টেবিলে একটি বিদ্যমান
+    -- `user_id` এর সাথে মিলবে। অস্তিত্ব নেই এমন একজন ব্যবহারকারীর জন্য আপনি
+    -- একটি কন্টাক্ট যোগ করতে পারবেন না।
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 
 -- ============================================================================
--- TABLE 3: loans
+-- টেবিল ৩: loans
 -- ============================================================================
--- PURPOSE: The core table of the application. Each row represents a single
--- loan transaction — either money the user has LENT to a contact, or money
--- the user has BORROWED from a contact.
+-- উদ্দেশ্য: অ্যাপ্লিকেশনের মূল টেবিল। প্রতিটি সারি একটি একক ঋণ লেনদেন উপস্থাপন করে — হয়
+-- ব্যবহারকারী কোনো কন্টাক্টকে টাকা ধার দিয়েছে (LENT), বা কোনো কন্টাক্ট থেকে
+-- টাকা ধার নিয়েছে (BORROWED)।
 --
--- VIVA NOTES:
--- - `ENUM('Lent', 'Borrowed')`: Restricts the `loan_type` column to exactly
---   two possible values. If someone tries to INSERT a value like 'Gift', the
---   database will reject it. This is a form of data validation at the
---   database level, which is more reliable than validating only in the
---   application code (defense in depth).
--- - `DECIMAL(10, 2)`: A fixed-point number type perfect for storing monetary
---   values. `10` is the total number of digits, and `2` is the number of
---   digits after the decimal point. This means it can store values from
---   -99,999,999.99 to 99,999,999.99. We use DECIMAL instead of FLOAT
---   because FLOAT can introduce tiny rounding errors (e.g., 10.30 might
---   become 10.2999999...), which is unacceptable for financial data.
--- - `DATE`: Stores only the date (YYYY-MM-DD), no time component. Perfect
---   for loan_date and due_date where time-of-day is irrelevant.
--- - `status ENUM(...)`: Tracks the repayment progress of the loan. The
---   application code (repayments.php) automatically updates this value
---   when repayments are logged:
---     'Unpaid'         → No repayments have been made yet (default)
---     'Partially Paid' → Some repayments made, but total < loan amount
---     'Settled'        → Total repayments >= loan amount (fully repaid)
--- - `TEXT`: Used for `notes` because it can store very long strings
---   (up to 65,535 characters), unlike VARCHAR which maxes at 65,535 but
---   counts toward the row size limit. TEXT is stored separately.
--- - This table has TWO foreign keys — linking it to both `users` and
---   `contacts`. This is a common pattern called a "junction" or
---   "association" pattern when multiple entities relate to each other.
+-- ভাইভা নোট:
+-- - `ENUM('Lent', 'Borrowed')`: `loan_type` কলামটিকে ঠিক দুটি সম্ভাব্য মানে সীমাবদ্ধ করে।
+--   কেউ যদি 'Gift' এর মতো মান INSERT করার চেষ্টা করে, ডাটাবেস তা প্রত্যাখ্যান করবে। এটি
+--   ডাটাবেস স্তরে ডেটা যাচাইকরণের একটি ফর্ম, যা শুধুমাত্র অ্যাপ্লিকেশন কোডে যাচাই করার চেয়ে
+--   বেশি নির্ভরযোগ্য (defense in depth)।
+-- - `DECIMAL(10, 2)`: আর্থিক মান সংরক্ষণের জন্য নিখুঁত একটি ফিক্সড-পয়েন্ট সংখ্যা টাইপ।
+--   `10` হলো মোট অঙ্কের সংখ্যা, এবং `2` হলো দশমিক বিন্দুর পরের অঙ্কের সংখ্যা। এর মানে এটি
+--   -99,999,999.99 থেকে 99,999,999.99 পর্যন্ত মান সংরক্ষণ করতে পারে। আমরা FLOAT এর
+--   পরিবর্তে DECIMAL ব্যবহার করি কারণ FLOAT ছোট রাউন্ডিং ত্রুটি তৈরি করতে পারে (যেমন, 10.30 হয়ে
+--   যেতে পারে 10.2999999...), যা আর্থিক ডেটার জন্য অগ্রহণযোগ্য।
+-- - `DATE`: শুধুমাত্র তারিখ সংরক্ষণ করে (YYYY-MM-DD), কোনো সময় নেই। loan_date এবং
+--   due_date এর জন্য উপযুক্ত যেখানে দিনের সময় অপ্রাসঙ্গিক।
+-- - `status ENUM(...)`: ঋণের পরিশোধের অগ্রগতি ট্র্যাক করে। যখন পরিশোধ রেকর্ড করা হয়
+--   তখন অ্যাপ্লিকেশন কোড (RepaymentHandler) স্বয়ংক্রিয়ভাবে এই মান আপডেট করে:
+--     'Unpaid'         → এখনও কোনো পরিশোধ করা হয়নি (ডিফল্ট)
+--     'Partially Paid' → কিছু পরিশোধ করা হয়েছে, কিন্তু মোট < ঋণের পরিমাণ
+--     'Settled'        → মোট পরিশোধ >= ঋণের পরিমাণ (সম্পূর্ণ পরিশোধিত)
+-- - `TEXT`: `notes` এর জন্য ব্যবহৃত হয় কারণ এটি খুব দীর্ঘ স্ট্রিং (৬৫,৫৩৫ ক্যারেক্টার পর্যন্ত)
+--   সংরক্ষণ করতে পারে, VARCHAR এর বিপরীতে যা ৬৫,৫৩৫ এ সর্বোচ্চ সীমায় পৌঁছায় কিন্তু
+--   সারি আকারের সীমার দিকে গণনা করা হয়। TEXT আলাদাভাবে সংরক্ষণ করা হয়।
+-- - এই টেবিলের দুটি ফরেন কি আছে — এটিকে `users` এবং `contacts` উভয়ের সাথে যুক্ত করে।
+--   এটি একটি সাধারণ প্যাটার্ন যাকে "junction" বা "association" প্যাটার্ন বলা হয় যখন একাধিক
+--   এনটিটি একে অপরের সাথে সম্পর্কিত হয়।
 -- ============================================================================
 CREATE TABLE loans (
-    loan_id INT AUTO_INCREMENT PRIMARY KEY,       -- Unique identifier for each loan
-    user_id INT NOT NULL,                         -- The user who created this loan record
-    contact_id INT NOT NULL,                      -- The contact involved in this loan
-    loan_type ENUM('Lent', 'Borrowed') NOT NULL,  -- Direction of the loan
-    amount DECIMAL(10, 2) NOT NULL,               -- Original loan amount
-    loan_date DATE NOT NULL,                      -- When the loan was made
-    due_date DATE,                                -- Optional: when repayment is expected
-    status ENUM('Unpaid', 'Partially Paid', 'Settled') DEFAULT 'Unpaid', -- Auto-updated
-    notes TEXT,                                   -- Optional description/reason
+    loan_id INT AUTO_INCREMENT PRIMARY KEY,       -- প্রতিটি ঋণের জন্য অনন্য শনাক্তকারী
+    user_id INT NOT NULL,                         -- যে ব্যবহারকারী এই ঋণের রেকর্ড তৈরি করেছেন
+    contact_id INT NOT NULL,                      -- এই ঋণের সাথে জড়িত কন্টাক্ট
+    loan_type ENUM('Lent', 'Borrowed') NOT NULL,  -- ঋণের ধরন
+    amount DECIMAL(10, 2) NOT NULL,               -- মূল ঋণের পরিমাণ
+    loan_date DATE NOT NULL,                      -- যখন ঋণ দেওয়া হয়েছিল
+    due_date DATE,                                -- ঐচ্ছিক: কখন পরিশোধ আশা করা হচ্ছে
+    status ENUM('Unpaid', 'Partially Paid', 'Settled') DEFAULT 'Unpaid', -- স্বয়ংক্রিয়-আপডেট
+    notes TEXT,                                   -- ঐচ্ছিক বিবরণ/কারণ
 
-    -- FOREIGN KEY to users: ensures the loan belongs to a valid user
+    -- users এর FOREIGN KEY: নিশ্চিত করে যে ঋণটি একটি বৈধ ব্যবহারকারীর অন্তর্গত
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
 
-    -- FOREIGN KEY to contacts: ensures the loan references a valid contact
+    -- contacts এর FOREIGN KEY: নিশ্চিত করে যে ঋণটি একটি বৈধ কন্টাক্ট রেফারেন্স করে
     FOREIGN KEY (contact_id) REFERENCES contacts(contact_id) ON DELETE CASCADE
 );
 
 
 -- ============================================================================
--- TABLE 4: repayments
+-- টেবিল ৪: repayments
 -- ============================================================================
--- PURPOSE: Tracks individual partial (or full) payments made against a loan.
--- A single loan can have MULTIPLE repayments — this is the one-to-many
--- relationship between `loans` and `repayments`.
+-- উদ্দেশ্য: একটি ঋণের বিপরীতে করা পৃথক আংশিক (বা সম্পূর্ণ) পরিশোধ ট্র্যাক করে।
+-- একটি একক ঋণের একাধিক পরিশোধ থাকতে পারে — এটি `loans` এবং `repayments` এর মধ্যে
+-- এক-থেকে-অনেক সম্পর্ক।
 --
--- VIVA NOTES:
--- - This table enables "partial payment tracking," which is a key feature
---   of the application. Instead of marking a loan as simply "paid" or
---   "unpaid," we record each individual payment with its amount and date.
--- - `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`: Automatically records when the
---   repayment was logged. Unlike the `loan_date` (which is a DATE chosen
---   by the user), this is a system-generated timestamp for accurate
---   record-keeping.
--- - The application logic (in repayments.php) performs this workflow:
---   1. INSERT the new repayment row
---   2. SELECT SUM(amount_paid) for all repayments of this loan
---   3. Compare the sum against the original loan amount
---   4. UPDATE loans.status to 'Partially Paid' or 'Settled'
---   This entire process is wrapped in a DATABASE TRANSACTION to ensure
---   atomicity — either ALL steps succeed, or NONE of them do.
+-- ভাইভা নোট:
+-- - এই টেবিলটি "আংশিক পরিশোধ ট্র্যাকিং" সক্ষম করে, যা অ্যাপ্লিকেশনের একটি মূল বৈশিষ্ট্য।
+--   একটি ঋণকে কেবল "paid" বা "unpaid" হিসাবে চিহ্নিত করার পরিবর্তে, আমরা এর পরিমাণ এবং
+--   তারিখ সহ প্রতিটি পৃথক অর্থ প্রদান রেকর্ড করি।
+-- - `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`: স্বয়ংক্রিয়ভাবে রেকর্ড করে কখন
+--   পরিশোধ লগ করা হয়েছিল। `loan_date` (যা ব্যবহারকারীর দ্বারা নির্বাচিত একটি DATE)
+--   এর বিপরীতে, সঠিক রেকর্ড-কিপিংয়ের জন্য এটি একটি সিস্টেম-উত্পন্ন টাইমস্ট্যাম্প।
+-- - অ্যাপ্লিকেশন লজিক (RepaymentHandler.java-এ) এই ওয়ার্কফ্লো সম্পাদন করে:
+--   ১. নতুন repayment সারি INSERT করে
+--   ২. এই ঋণের সমস্ত পরিশোধের জন্য SELECT SUM(amount_paid) করে
+--   ৩. মূল ঋণের পরিমাণের সাথে যোগফলের তুলনা করে
+--   ৪. loans.status 'Partially Paid' বা 'Settled'-এ UPDATE করে
+--   এই সম্পূর্ণ প্রক্রিয়াটি একটি ডাটাবেস TRANSACTION-এ মোড়ানো থাকে যাতে পারমাণবিকতা
+--   (atomicity) নিশ্চিত করা যায় — হয় সমস্ত ধাপ সফল হবে, বা তাদের কোনটিই হবে না।
 -- ============================================================================
 CREATE TABLE repayments (
-    repayment_id INT AUTO_INCREMENT PRIMARY KEY,  -- Unique identifier for each repayment
-    loan_id INT NOT NULL,                         -- Which loan this repayment is for
-    amount_paid DECIMAL(10, 2) NOT NULL,          -- How much was paid in this installment
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Auto-recorded timestamp
+    repayment_id INT AUTO_INCREMENT PRIMARY KEY,  -- প্রতিটি পরিশোধের জন্য অনন্য শনাক্তকারী
+    loan_id INT NOT NULL,                         -- এই পরিশোধটি কোন ঋণের জন্য
+    amount_paid DECIMAL(10, 2) NOT NULL,          -- এই কিস্তিতে কত টাকা দেওয়া হয়েছিল
+    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- স্বয়ংক্রিয়ভাবে রেকর্ড করা টাইমস্ট্যাম্প
 
-    -- FOREIGN KEY to loans: ensures the repayment references an existing loan
+    -- loans এর FOREIGN KEY: নিশ্চিত করে যে পরিশোধটি একটি বিদ্যমান ঋণের রেফারেন্স দেয়
     FOREIGN KEY (loan_id) REFERENCES loans(loan_id) ON DELETE CASCADE
 );
 
 
 -- ============================================================================
--- END OF SCHEMA
+-- স্কিমার সমাপ্তি
 -- ============================================================================
--- After running this script, you should have:
---   1. A database called `personal_ledger`
---   2. Four tables: users, contacts, loans, repayments
---   3. Foreign key relationships enforcing referential integrity
---   4. Cascading deletes to prevent orphan records
+-- এই স্ক্রিপ্ট চালানোর পর, আপনার যা থাকা উচিত:
+--   ১. `personal_ledger` নামের একটি ডাটাবেস
+--   ২. ৪টি টেবিল: users, contacts, loans, repayments
+--   ৩. রেফারেনশিয়াল অখণ্ডতা প্রয়োগকারী ফরেন কি সম্পর্কগুলো
+--   ৪. অরফান রেকর্ড প্রতিরোধ করতে ক্যাসকেডিং ডিলিট
 --
--- You can verify the tables were created by running:
+-- আপনি টেবিলগুলো তৈরি করা হয়েছে তা যাচাই করতে রান করতে পারেন:
 --   SHOW TABLES;
 --   DESCRIBE users;
 --   DESCRIBE contacts;

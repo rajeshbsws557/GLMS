@@ -1,51 +1,51 @@
 /**
  * ============================================================================
- * FILE: app.js — Dashboard Logic
+ * ফাইল: app.js — ড্যাশবোর্ড লজিক
  * ============================================================================
  *
- * This is the main JS file for the dashboard. It handles:
+ * এটি ড্যাশবোর্ডের প্রধান JS ফাইল। এটি যা হ্যান্ডেল করে:
  *
- *   - Authentication guard (redirect if not logged in)
- *   - Loading contacts and loans from the PHP API
- *   - Rendering loan cards in the "Lent" and "Borrowed" columns
- *   - Summary calculations (totals, net balance)
- *   - Adding contacts, creating loans, logging repayments
- *   - Viewing repayment history
- *   - Modal open/close, toast notifications, logout
+ *   - অথেনটিকেশন গার্ড (লগইন না থাকলে রিডাইরেক্ট)
+ *   - API থেকে কন্টাক্ট এবং লোন লোড করা
+ *   - "Lent" এবং "Borrowed" কলামে লোন কার্ডগুলো রেন্ডার করা
+ *   - সারসংক্ষেপ হিসাব (মোট, নিট ব্যালেন্স)
+ *   - কন্টাক্ট যোগ করা, লোন তৈরি করা, পরিশোধ রেকর্ড করা
+ *   - পরিশোধের ইতিহাস দেখা
+ *   - মোডাল খোলা/বন্ধ করা, টোস্ট নোটিফিকেশন, লগআউট
  *
- * DATA FLOW (for viva):
+ * ডেটা ফ্লো (ভাইভার জন্য):
  *
- *   Browser (app.js)           PHP API               MySQL
+ *   Browser (app.js)           Java API              MySQL
  *   ────────────────────       ─────────────         ──────
- *   fetch(url, {body})   -->   reads php://input -->  prepared statement
- *   gets JSON response   <--   json_encode()    <--   query result
+ *   fetch(url, {body})   -->   HttpExchange      -->  prepared statement
+ *   gets JSON response   <--   Gson .toJson()    <--  query result
  *
- * KEY JS CONCEPTS:
- *   async/await — clean way to handle Promises (no .then() chains)
+ * মূল JS ধারণা:
+ *   async/await — Promises হ্যান্ডেল করার পরিচ্ছন্ন উপায় (.then() চেইন ছাড়া)
  *   Array methods — .filter(), .reduce(), .map(), .find(), .forEach()
- *   Template literals — backtick strings with ${expression} embedding
+ *   Template literals — backtick string যেখানে ${expression} এম্বেড করা যায়
  *   DOM manipulation — createElement, innerHTML, textContent
- *   XSS prevention — escapeHtml() sanitises user-supplied strings
+ *   XSS prevention — escapeHtml() ইউজার-সাপ্লাইড স্ট্রিংগুলোকে নিরাপদ করে
  *
  * ============================================================================
  */
 
 // ---------------------------------------------------------------------------
-// Global state
+// গ্লোবাল স্টেট (Global state)
 // ---------------------------------------------------------------------------
-// Cached data so we can reference loans/contacts without extra API calls.
+// ক্যাশ করা ডেটা যাতে আমরা অতিরিক্ত API কল ছাড়াই লোন/কন্টাক্ট রেফারেন্স করতে পারি।
 
-var currentUserId = null;   // from localStorage
-var contactsList  = [];     // array of { contact_id, contact_name, phone_number }
-var loansList     = [];     // array of loan objects (see loadLoans)
+var currentUserId = null;   // localStorage থেকে
+var contactsList  = [];     // { contact_id, contact_name, phone_number } এর array
+var loansList     = [];     // লোন অবজেক্টের array (loadLoans দেখুন)
 
 
 // ---------------------------------------------------------------------------
-// Init — runs immediately on script load
+// Init — স্ক্রিপ্ট লোড হওয়ার সাথে সাথে চলে
 // ---------------------------------------------------------------------------
 (async function init() {
 
-    // --- auth guard ---
+    // --- অথেনটিকেশন গার্ড (auth guard) ---
     currentUserId = localStorage.getItem('user_id');
     if (!currentUserId) {
         window.location.href = 'index.html';
@@ -55,11 +55,11 @@ var loansList     = [];     // array of loan objects (see loadLoans)
     document.getElementById('display-user-name').textContent =
         localStorage.getItem('full_name') || 'User';
 
-    // Pre-fill loan date with today (YYYY-MM-DD)
+    // আজকের তারিখ দিয়ে ঋণের তারিখ প্রি-ফিল করুন (YYYY-MM-DD)
     document.getElementById('loan-date').value =
         new Date().toISOString().split('T')[0];
 
-    // Fetch data
+    // ডেটা ফেচ করুন
     try {
         await loadContacts();
         await loadLoans();
@@ -68,25 +68,24 @@ var loansList     = [];     // array of loan objects (see loadLoans)
         showToast('Failed to load data. Check your connection.', 'error');
     }
 
-    // Swap loading spinner for content
+    // কন্টেন্টের জন্য লোডিং স্পিনার বদলান
     document.getElementById('loading-state').style.display = 'none';
     document.getElementById('main-content').style.display  = 'block';
 })();
 
 
 // ===========================================================================
-//  DATA LOADING
+//  ডেটা লোডিং (DATA LOADING)
 // ===========================================================================
 
 /**
- * loadContacts — GET /contacts.php?user_id=X
+ * loadContacts — GET /contacts?user_id=X
  *
- * Fetches the user's contacts and stores them in `contactsList`.
- * Then calls populateContactDropdown() to fill the <select> in the
- * "New Loan" form.
+ * ইউজারের কন্টাক্টগুলো ফেচ করে এবং `contactsList`-এ সেভ করে।
+ * তারপর "New Loan" ফর্মে <select> পূরণ করতে populateContactDropdown() কল করে।
  */
 async function loadContacts() {
-    var res  = await fetch(API_BASE_URL + 'contacts.php?user_id=' + currentUserId);
+    var res  = await fetch(API_BASE_URL + 'contacts?user_id=' + currentUserId);
     var data = await res.json();
 
     if (data.success) {
@@ -96,11 +95,11 @@ async function loadContacts() {
 }
 
 /**
- * populateContactDropdown — rebuilds the <select> options for contacts.
+ * populateContactDropdown — কন্টাক্টগুলোর জন্য <select> অপশনগুলো রি-বিল্ড করে।
  *
- * We clear the dropdown first (except the placeholder), then create an
- * <option> for each contact.  option.value = contact_id is what gets
- * sent to the server; option.textContent is what the user sees.
+ * আমরা প্রথমে ড্রপডাউন ক্লিয়ার করি (প্লেসহোল্ডার বাদে), তারপর প্রতিটি কন্টাক্টের
+ * জন্য একটি <option> তৈরি করি। option.value = contact_id যা সার্ভারে
+ * পাঠানো হয়; option.textContent হলো যা ব্যবহারকারী দেখেন।
  */
 function populateContactDropdown() {
     var select = document.getElementById('loan-contact');
@@ -115,14 +114,14 @@ function populateContactDropdown() {
 }
 
 /**
- * loadLoans — GET /loans.php?user_id=X
+ * loadLoans — GET /loans?user_id=X
  *
- * The backend returns loans JOINed with contacts (so we get names) and
- * includes a `total_paid` field computed by a SUM subquery. After
- * fetching we render cards and update the summary.
+ * ব্যাকএন্ড লোনগুলোকে কন্টাক্টের সাথে JOIN করে পাঠায় (যাতে আমরা নাম পাই) এবং
+ * একটি `total_paid` ফিল্ড অন্তর্ভুক্ত করে যা SUM সাবকোয়েরি দ্বারা গণনা করা হয়।
+ * ফেচ করার পরে আমরা কার্ড রেন্ডার করি এবং সারসংক্ষেপ আপডেট করি।
  */
 async function loadLoans() {
-    var res  = await fetch(API_BASE_URL + 'loans.php?user_id=' + currentUserId);
+    var res  = await fetch(API_BASE_URL + 'loans?user_id=' + currentUserId);
     var data = await res.json();
 
     if (data.success) {
@@ -134,22 +133,22 @@ async function loadLoans() {
 
 
 // ===========================================================================
-//  RENDERING
+//  রেন্ডারিং (RENDERING)
 // ===========================================================================
 
 /**
- * renderLoans — splits loansList into Lent / Borrowed and builds HTML.
+ * renderLoans — loansList কে Lent / Borrowed এ ভাগ করে এবং HTML তৈরি করে।
  *
- * Array methods used (important for viva):
- *   .filter(fn)  — returns a new array with only items where fn is true
- *   .map(fn)     — transforms each item and returns a new array
- *   .join('')     — glues array strings into one big string
+ * ব্যবহৃত Array মেথড (ভাইভার জন্য গুরুত্বপূর্ণ):
+ *   .filter(fn)  — শুধুমাত্র সেই আইটেমগুলো নিয়ে নতুন array দেয় যেখানে fn সত্য (true)
+ *   .map(fn)     — প্রতিটি আইটেমকে রূপান্তর করে এবং একটি নতুন array দেয়
+ *   .join('')     — array স্ট্রিংগুলোকে একটি বড় স্ট্রিংয়ে যুক্ত করে
  */
 function renderLoans() {
     var lent     = loansList.filter(function (l) { return l.loan_type === 'Lent'; });
     var borrowed = loansList.filter(function (l) { return l.loan_type === 'Borrowed'; });
 
-    // --- lent column ---
+    // --- ধার দেওয়া (lent) কলাম ---
     var lentBox = document.getElementById('loans-lent');
     if (lent.length === 0) {
         lentBox.innerHTML = '<p class="empty-msg">No loans lent yet. Click "+ New Loan" to start.</p>';
@@ -157,7 +156,7 @@ function renderLoans() {
         lentBox.innerHTML = lent.map(createLoanCard).join('');
     }
 
-    // --- borrowed column ---
+    // --- ধার নেওয়া (borrowed) কলাম ---
     var borrowedBox = document.getElementById('loans-borrowed');
     if (borrowed.length === 0) {
         borrowedBox.innerHTML = '<p class="empty-msg">No borrowed loans yet. Click "+ New Loan" to start.</p>';
@@ -165,20 +164,20 @@ function renderLoans() {
         borrowedBox.innerHTML = borrowed.map(createLoanCard).join('');
     }
 
-    // count badges
+    // ব্যাজ কাউন্ট
     document.getElementById('lent-count').textContent     = lent.length;
     document.getElementById('borrowed-count').textContent = borrowed.length;
 }
 
 
 /**
- * createLoanCard — returns the HTML string for one loan card.
+ * createLoanCard — একটি লোন কার্ডের জন্য HTML স্ট্রিং রিটার্ন করে।
  *
- * The card shows: contact name, amount, dates, status badge,
- * a thin progress bar, and action buttons.
+ * কার্ডে দেখায়: কন্টাক্টের নাম, পরিমাণ, তারিখ, স্ট্যাটাস ব্যাজ,
+ * একটি চিকন প্রগ্রেস বার, এবং অ্যাকশন বোতাম।
  *
- * Derived values (remaining, progress %) are computed here rather
- * than stored in the DB — avoids redundancy.
+ * ডেরিভড ভ্যালু (বাকি, প্রগ্রেস %) DB তে সেভ করার বদলে এখানেই
+ * হিসাব করা হয় — রিডানডেন্সি এড়ায়।
  *
  * @param {Object} loan
  * @returns {string}
@@ -188,15 +187,15 @@ function createLoanCard(loan) {
     var remaining = Math.max(0, loan.amount - loan.total_paid);
     var pct       = Math.min(100, (loan.total_paid / loan.amount) * 100);
 
-    // map status to CSS class
+    // CSS ক্লাসে স্ট্যাটাস ম্যাপ করুন
     var badgeClass = 'badge-unpaid';
     if (loan.status === 'Partially Paid') badgeClass = 'badge-partial';
     if (loan.status === 'Settled')        badgeClass = 'badge-settled';
 
-    // card type class controls the left accent stripe colour
+    // কার্ড টাইপ ক্লাস বাম দিকের অ্যাকসেন্ট স্ট্রাইপের রঙ নিয়ন্ত্রণ করে
     var typeClass = loan.loan_type === 'Lent' ? 'type-lent' : 'type-borrowed';
 
-    // conditional sections
+    // শর্তাধীন সেকশন
     var dueLine = '';
     if (loan.due_date) {
         dueLine = '<span>Due: ' + formatDate(loan.due_date) + '</span>';
@@ -215,7 +214,7 @@ function createLoanCard(loan) {
         remainingLine = '<span style="color:var(--green)">Fully settled</span>';
     }
 
-    // action buttons — hide "Log Payment" when settled
+    // অ্যাকশন বোতাম — সেটল হয়ে গেলে "Log Payment" লুকান
     var actions;
     if (loan.status !== 'Settled') {
         actions =
@@ -258,9 +257,9 @@ function createLoanCard(loan) {
 
 
 /**
- * updateSummary — computes totals and writes them into the summary cards.
+ * updateSummary — মোট হিসাব করে এবং সারসংক্ষেপ কার্ডে লেখে।
  *
- * Uses .reduce() to sum values:
+ * মান যোগ করতে .reduce() ব্যবহার করে:
  *   array.reduce((accumulator, item) => accumulator + item.field, startValue)
  *
  *   [10, 20, 30].reduce((s, n) => s + n, 0) => 60
@@ -307,14 +306,14 @@ function updateSummary() {
 
 
 // ===========================================================================
-//  FORM HANDLERS
+//  ফর্ম হ্যান্ডলার (FORM HANDLERS)
 // ===========================================================================
 
 /**
- * handleAddContact — POST /contacts.php
+ * handleAddContact — POST /contacts
  *
- * Creates a new contact, then reloads the contact list (which also
- * refreshes the dropdown in the loan form).
+ * একটি নতুন কন্টাক্ট তৈরি করে, তারপর কন্টাক্ট লিস্ট রিলোড করে (যা লোন
+ * ফর্মে ড্রপডাউনও রিফ্রেশ করে)।
  */
 async function handleAddContact(event) {
     event.preventDefault();
@@ -325,7 +324,7 @@ async function handleAddContact(event) {
     if (!name) { showToast('Enter a contact name.', 'error'); return false; }
 
     try {
-        var res  = await fetch(API_BASE_URL + 'contacts.php', {
+        var res  = await fetch(API_BASE_URL + 'contacts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -352,10 +351,9 @@ async function handleAddContact(event) {
 }
 
 /**
- * handleAddLoan — POST /loans.php
+ * handleAddLoan — POST /loans
  *
- * Creates a new loan record, then reloads the loan list to show it
- * in the correct column.
+ * একটি নতুন লোন রেকর্ড তৈরি করে, তারপর সঠিক কলামে দেখানোর জন্য লোন লিস্ট রিলোড করে।
  */
 async function handleAddLoan(event) {
     event.preventDefault();
@@ -377,7 +375,7 @@ async function handleAddLoan(event) {
     }
 
     try {
-        var res = await fetch(API_BASE_URL + 'loans.php', {
+        var res = await fetch(API_BASE_URL + 'loans', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -396,7 +394,7 @@ async function handleAddLoan(event) {
             showToast('Loan created.', 'success');
             closeModal('modal-loan');
             document.getElementById('form-add-loan').reset();
-            // re-set today
+            // আজকের তারিখ পুনরায় সেট করুন
             document.getElementById('loan-date').value = new Date().toISOString().split('T')[0];
             await loadLoans();
         } else {
@@ -411,10 +409,10 @@ async function handleAddLoan(event) {
 
 
 /**
- * openRepaymentModal — fills the repayment modal with the selected
- * loan's info (contact name, amount, remaining) and opens it.
+ * openRepaymentModal — নির্বাচিত লোনের তথ্য (কন্টাক্টের নাম, পরিমাণ, বাকি)
+ * দিয়ে রিপেমেন্ট মোডাল পূরণ করে এবং এটি খোলে।
  *
- * .find() — searches the cached loansList and returns the first match.
+ * .find() — ক্যাশ করা loansList এ খোঁজে এবং প্রথম ম্যাচ রিটার্ন করে।
  */
 function openRepaymentModal(loanId) {
     var loan = loansList.find(function (l) { return l.loan_id === loanId; });
@@ -436,14 +434,14 @@ function openRepaymentModal(loanId) {
 }
 
 /**
- * handleAddRepayment — POST /repayments.php
+ * handleAddRepayment — POST /repayments
  *
- * The backend wraps the insert + status-update in a TRANSACTION:
- *   1. INSERT repayment
- *   2. SELECT SUM(amount_paid) for the loan
- *   3. UPDATE loans.status to 'Partially Paid' or 'Settled'
+ * ব্যাকএন্ড insert + status-update কে একটি TRANSACTION-এ মুড়ে দেয়:
+ *   ১. INSERT repayment
+ *   ২. লোনের জন্য SELECT SUM(amount_paid)
+ *   ৩. loans.status 'Partially Paid' বা 'Settled' এ UPDATE
  *
- * We then reload loans so the card reflects the new status/progress.
+ * এরপর আমরা লোন রিলোড করি যাতে কার্ডে নতুন স্ট্যাটাস/প্রগ্রেস প্রতিফলিত হয়।
  */
 async function handleAddRepayment(event) {
     event.preventDefault();
@@ -457,7 +455,7 @@ async function handleAddRepayment(event) {
     }
 
     try {
-        var res = await fetch(API_BASE_URL + 'repayments.php', {
+        var res = await fetch(API_BASE_URL + 'repayments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -490,22 +488,22 @@ async function handleAddRepayment(event) {
 
 
 /**
- * viewRepaymentHistory — GET /repayments.php?loan_id=X
+ * viewRepaymentHistory — GET /repayments?loan_id=X
  *
- * Fetches all payments for a loan and displays them in a modal.
+ * একটি লোনের সব পেমেন্ট ফেচ করে এবং একটি মোডালে দেখায়।
  */
 async function viewRepaymentHistory(loanId) {
     var loan = loansList.find(function (l) { return l.loan_id === loanId; });
 
     try {
-        var res  = await fetch(API_BASE_URL + 'repayments.php?loan_id=' + loanId);
+        var res  = await fetch(API_BASE_URL + 'repayments?loan_id=' + loanId);
         var data = await res.json();
         var box  = document.getElementById('repayment-history-content');
 
         if (data.success && data.repayments.length > 0) {
             var html = '';
 
-            // loan summary block
+            // লোন সারসংক্ষেপ ব্লক
             if (loan) {
                 var rem = Math.max(0, loan.amount - loan.total_paid);
                 html +=
@@ -523,7 +521,7 @@ async function viewRepaymentHistory(loanId) {
                     '</div>';
             }
 
-            // individual payments
+            // ব্যক্তিগত পেমেন্টগুলো
             data.repayments.forEach(function (r, i) {
                 html +=
                     '<div class="repayment-row">' +
@@ -546,7 +544,7 @@ async function viewRepaymentHistory(loanId) {
 
 
 // ===========================================================================
-//  MODAL HELPERS
+//  মোডাল হেল্পার (MODAL HELPERS)
 // ===========================================================================
 
 function openModal(id)  {
@@ -563,7 +561,7 @@ function handleOverlayClick(event, id) {
 
 
 // ===========================================================================
-//  LOGOUT
+//  লগআউট (LOGOUT)
 // ===========================================================================
 
 function handleLogout() {
@@ -573,13 +571,13 @@ function handleLogout() {
 
 
 // ===========================================================================
-//  UTILITY FUNCTIONS
+//  ইউটিলিটি ফাংশন (UTILITY FUNCTIONS)
 // ===========================================================================
 
 /**
- * fmtNum — formats a number to 2 decimal places with Indian locale commas.
+ * fmtNum — ভারতীয় লোকাল কমা সহ একটি নম্বরকে ২ দশমিক স্থান পর্যন্ত ফর্ম্যাট করে।
  *
- * toLocaleString('en-IN') uses the lakh/crore system:
+ * toLocaleString('en-IN') লাখ/কোটি সিস্টেম ব্যবহার করে:
  *   1234567.5 => "12,34,567.50"
  */
 function fmtNum(n) {
@@ -589,7 +587,7 @@ function fmtNum(n) {
     });
 }
 
-/** formatDate — turns "2024-01-15" into "Jan 15, 2024" */
+/** formatDate — "2024-01-15" কে "Jan 15, 2024" তে পরিণত করে */
 function formatDate(str) {
     if (!str) return 'N/A';
     return new Date(str + 'T00:00:00').toLocaleDateString('en-US', {
@@ -597,7 +595,7 @@ function formatDate(str) {
     });
 }
 
-/** formatDateTime — turns a timestamp into "Jan 15, 2024, 02:30 PM" */
+/** formatDateTime — একটি টাইমস্ট্যাম্পকে "Jan 15, 2024, 02:30 PM" তে পরিণত করে */
 function formatDateTime(str) {
     if (!str) return 'N/A';
     return new Date(str).toLocaleDateString('en-US', {
@@ -607,10 +605,10 @@ function formatDateTime(str) {
 }
 
 /**
- * escapeHtml — prevents XSS by converting < > & " into safe entities.
+ * escapeHtml — < > & " কে নিরাপদ এন্টিটিতে রূপান্তর করে XSS প্রতিরোধ করে।
  *
- * How: set the string as textContent (auto-escapes), then read it back
- * from innerHTML.
+ * কীভাবে: স্ট্রিংটিকে textContent হিসাবে সেট করুন (অটো-এসকেপ করে), তারপর এটি
+ * innerHTML থেকে ফেরত পড়ুন।
  */
 function escapeHtml(str) {
     var d = document.createElement('div');
@@ -619,10 +617,10 @@ function escapeHtml(str) {
 }
 
 /**
- * showToast — small notification that auto-dismisses after 3.5 s.
+ * showToast — ছোট নোটিফিকেশন যা ৩.৫ সেকেন্ড পর স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যায়।
  *
- * Duplicated from auth.js because dashboard.html loads app.js (not
- * auth.js). In a bigger project you'd factor this into a shared file.
+ * auth.js থেকে নকল করা কারণ dashboard.html app.js লোড করে (auth.js নয়)।
+ * একটি বড় প্রজেক্টে আপনি এটি একটি শেয়ার্ড ফাইলে রাখতে পারেন।
  */
 function showToast(message, type) {
     type = type || 'info';

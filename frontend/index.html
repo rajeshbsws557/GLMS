@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <!--
 ============================================================================
-FILE: index.html — Login & Registration Page
+ফাইল: index.html — লগইন ও রেজিস্ট্রেশন পৃষ্ঠা
 ============================================================================
 
-PURPOSE:
-Entry point of the application. Provides login and registration forms
-inside a centered card. Users authenticate here before accessing the
-dashboard.
+উদ্দেশ্য:
+অ্যাপ্লিকেশনের প্রবেশ বিন্দু। একটি কেন্দ্রীভূত কার্ডের মধ্যে লগইন এবং
+রেজিস্ট্রেশন ফর্ম প্রদান করে। ব্যবহারকারীরা ড্যাশবোর্ডে প্রবেশের আগে
+এখানে প্রমাণীকরণ (authenticate) করে।
 
-TECHNOLOGIES:
-- Tailwind CSS v3 (CDN) — utility classes for spacing, flex, typography
-- custom.css — green+white theme variables, form controls, auth-specific styles
-- auth.js — form handling (fetch + localStorage)
-- config.js — API base URL
+প্রযুক্তি:
+- Tailwind CSS v3 (CDN) — স্পেসিং, ফ্লেক্স, টাইপোগ্রাফির জন্য utility ক্লাস
+- custom.css — সবুজ+সাদা থিম ভেরিয়েবল, ফর্ম কন্ট্রোল, auth-নির্দিষ্ট স্টাইল
+- auth.js — ফর্ম হ্যান্ডলিং (fetch + localStorage)
+- config.js — API বেস URL
 
-VIVA NOTE:
-Both login and registration live on the same page, toggled by JS. This
-avoids a full page reload and gives a smoother experience.
+ভাইভা নোট:
+লগইন এবং রেজিস্ট্রেশন দুটোই একই পৃষ্ঠায় আছে, JS দিয়ে টগল করা হয়।
+এতে পুরো পৃষ্ঠা রিলোড এড়ানো যায় এবং আরও মসৃণ অভিজ্ঞতা দেয়।
 ============================================================================
 -->
 <html lang="en">
@@ -27,23 +27,23 @@ avoids a full page reload and gives a smoother experience.
     <meta name="description" content="Bakir Khata — Track money lent and borrowed with friends and family.">
     <title>Bakir Khata — Sign In</title>
 
-    <!-- Tailwind CSS (Play CDN — runtime, fine for demos) -->
+    <!-- Tailwind CSS (Play CDN — রানটাইম, ডেমোর জন্য ঠিক আছে) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Custom green+white theme + components -->
+    <!-- কাস্টম সবুজ+সাদা থিম + কম্পোনেন্ট -->
     <link rel="stylesheet" href="css/custom.css">
-    <!-- Simple text favicon -->
+    <!-- সাধারণ টেক্সট ফেভিকন -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>$</text></svg>">
 </head>
 <body>
 
-    <!-- Toast container (populated by JS) -->
+    <!-- টোস্ট কন্টেইনার (JS দ্বারা পূরণ হয়) -->
     <div id="toast-container" class="toast-wrap"></div>
 
-    <!-- Centered auth card -->
+    <!-- কেন্দ্রীভূত auth কার্ড -->
     <div class="auth-wrapper">
         <div class="auth-box">
 
-            <!-- Heading -->
+            <!-- শিরোনাম -->
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold tracking-tight" style="color:var(--accent)">Bakir Khata</h1>
                 <p class="text-sm mt-1" style="color:var(--text-dim)">
@@ -51,7 +51,7 @@ avoids a full page reload and gives a smoother experience.
                 </p>
             </div>
 
-            <!-- Tabs -->
+            <!-- ট্যাব -->
             <div class="auth-tabs">
                 <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">
                     Sign In
@@ -62,16 +62,16 @@ avoids a full page reload and gives a smoother experience.
             </div>
 
             <!-- ============================================================
-                 LOGIN FORM
+                 লগইন ফর্ম
                  ============================================================
-                 onsubmit="return handleLogin(event)" calls our JS handler
-                 and prevents the default page-reloading form submission.
-                 
-                 Each input uses:
-                 - id: so JS can grab the value with getElementById
-                 - type: tells the browser what data to expect
-                 - required: HTML5 validation gate
-                 - autocomplete: lets the browser suggest saved credentials
+                 onsubmit="return handleLogin(event)" আমাদের JS হ্যান্ডলার
+                 কল করে এবং ডিফল্ট পৃষ্ঠা-রিলোডিং ফর্ম সাবমিশন প্রতিরোধ করে।
+
+                 প্রতিটি input ব্যবহার করে:
+                 - id: যাতে JS getElementById দিয়ে মান পেতে পারে
+                 - type: ব্রাউজারকে বলে কোন ধরনের ডেটা প্রত্যাশিত
+                 - required: HTML5 ভ্যালিডেশন গেট
+                 - autocomplete: ব্রাউজারকে সংরক্ষিত credential সাজেস্ট করতে দেয়
                  ============================================================ -->
             <form id="form-login" onsubmit="return handleLogin(event)">
                 <div class="mb-4">
@@ -102,7 +102,7 @@ avoids a full page reload and gives a smoother experience.
             </form>
 
             <!-- ============================================================
-                 REGISTRATION FORM (hidden by default)
+                 রেজিস্ট্রেশন ফর্ম (ডিফল্টে লুকানো)
                  ============================================================ -->
             <form id="form-register" style="display:none" onsubmit="return handleRegister(event)">
                 <div class="mb-4">
@@ -162,7 +162,7 @@ avoids a full page reload and gives a smoother experience.
         </div>
     </div>
 
-    <!-- JS: config first (defines API_BASE_URL), then auth logic -->
+    <!-- JS: প্রথমে config (API_BASE_URL সংজ্ঞায়িত করে), তারপর auth লজিক -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
 </body>

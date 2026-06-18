@@ -1,30 +1,30 @@
 /**
  * ============================================================================
- * FILE: auth.js — Login & Registration Logic
+ * ফাইল: auth.js — লগইন ও রেজিস্ট্রেশন লজিক
  * ============================================================================
  * 
- * Handles:
- *   1. Switching between the Sign In / Create Account tabs
- *   2. Login — POST to auth.php, store session in localStorage
- *   3. Registration — POST to auth.php, then redirect to login tab
- *   4. Toast notifications for success/error feedback
+ * যা হ্যান্ডেল করে:
+ *   ১. Sign In / Create Account ট্যাবের মধ্যে স্যুইচ করা
+ *   ২. লগইন — auth-এ POST রিকোয়েস্ট, localStorage-এ সেশন সংরক্ষণ
+ *   ৩. রেজিস্ট্রেশন — auth-এ POST রিকোয়েস্ট, তারপর লগইন ট্যাবে রিডাইরেক্ট
+ *   ৪. সাফল্য/ত্রুটি ফিডব্যাকের জন্য টোস্ট নোটিফিকেশন
  * 
- * KEY CONCEPTS FOR VIVA:
+ * ভাইভার জন্য মূল ধারণা:
  * 
- * fetch() — modern way to make HTTP requests; returns a Promise.
- * async/await — syntactic sugar over Promises; lets us write asynchronous
- *   code that reads top-to-bottom instead of chaining .then() callbacks.
- * localStorage — browser key-value store that persists across page reloads.
- *   We keep user_id + full_name here so the dashboard knows who's logged in.
- *   NOT secure for production (any JS can read it); fine for a demo.
- * event.preventDefault() — stops the browser's default form submit (which
- *   would reload the page and lose our JS state).
+ * fetch() — HTTP রিকোয়েস্ট করার আধুনিক উপায়; একটি Promise রিটার্ন করে।
+ * async/await — Promise-এর উপর syntactic sugar; .then() কলব্যাক চেইনের
+ *   পরিবর্তে আমাদের অ্যাসিনক্রোনাস কোড লিখতে দেয় যা উপর থেকে নিচে পড়া যায়।
+ * localStorage — ব্রাউজারের key-value স্টোর যা পৃষ্ঠা রিলোড করার পরেও থাকে।
+ *   আমরা user_id + full_name এখানে রাখি যাতে ড্যাশবোর্ড জানে কে লগইন করেছে।
+ *   প্রোডাকশনের জন্য নিরাপদ নয় (যেকোনো JS এটি পড়তে পারে); ডেমোর জন্য ঠিক আছে।
+ * event.preventDefault() — ব্রাউজারের ডিফল্ট ফর্ম সাবমিট বন্ধ করে (যা
+ *   পৃষ্ঠা রিলোড করত এবং আমাদের JS স্টেট হারিয়ে যেত)।
  * ============================================================================
  */
 
-// If the user is already logged in, skip straight to dashboard.
-// This is wrapped in an IIFE so it runs immediately on script load
-// without leaking variables into the global scope.
+// ব্যবহারকারী যদি ইতিমধ্যে লগইন করে থাকেন, তাহলে সরাসরি ড্যাশবোর্ডে যান।
+// এটি একটি IIFE-তে মোড়ানো যাতে স্ক্রিপ্ট লোড হওয়ার সাথে সাথে এটি চলে
+// গ্লোবাল স্কোপে ভেরিয়েবল লিক না করে।
 (function checkExistingSession() {
     if (localStorage.getItem('user_id')) {
         window.location.href = 'dashboard.html';
@@ -33,14 +33,14 @@
 
 
 /**
- * switchTab — toggles visibility between login and register forms.
+ * switchTab — লগইন এবং রেজিস্টার ফর্মের দৃশ্যমানতা টগল করে।
  *
- * DOM methods used:
- *   getElementById() — grab a specific element by its HTML id
- *   .style.display   — CSS display property ('block' = visible, 'none' = hidden)
- *   .classList.add / .remove — toggle CSS classes for styling
+ * ব্যবহৃত DOM মেথড:
+ *   getElementById() — HTML id দিয়ে একটি নির্দিষ্ট এলিমেন্ট ধরুন
+ *   .style.display   — CSS ডিসপ্লে প্রপার্টি ('block' = দৃশ্যমান, 'none' = লুকানো)
+ *   .classList.add / .remove — স্টাইলিংয়ের জন্য CSS ক্লাস টগল করুন
  *
- * @param {string} tab  Either 'login' or 'register'
+ * @param {string} tab  হয় 'login' অথবা 'register'
  */
 function switchTab(tab) {
     const loginForm    = document.getElementById('form-login');
@@ -63,21 +63,21 @@ function switchTab(tab) {
 
 
 /**
- * handleLogin — processes the login form.
+ * handleLogin — লগইন ফর্ম প্রসেস করে।
  *
- * Flow:
- *  1. Prevent default form submission (page reload)
- *  2. Grab email + password from the inputs
- *  3. POST JSON to auth.php with action:"login"
- *  4. On success → store user_id & full_name, redirect to dashboard
- *  5. On failure → show error toast
+ * ফ্লো (Flow):
+ *  ১. ডিফল্ট ফর্ম সাবমিশন (পৃষ্ঠা রিলোড) প্রতিরোধ করুন
+ *  ২. ইনপুট থেকে ইমেইল + পাসওয়ার্ড ধরুন
+ *  ৩. action:"login" সহ auth API-তে JSON POST করুন
+ *  ৪. সফল হলে → user_id এবং full_name সংরক্ষণ করুন, ড্যাশবোর্ডে রিডাইরেক্ট করুন
+ *  ৫. ব্যর্থ হলে → এরর টোস্ট দেখান
  *
- * fetch() options explained:
- *   method  — HTTP verb (POST here because we're sending credentials)
- *   headers — tells PHP we're sending JSON so it reads php://input
- *   body    — the actual data, serialised with JSON.stringify()
+ * fetch() অপশন ব্যাখ্যা:
+ *   method  — HTTP verb (এখানে POST কারণ আমরা ক্রেডেনশিয়াল পাঠাচ্ছি)
+ *   headers — ব্যাকএন্ডকে বলে যে আমরা JSON পাঠাচ্ছি
+ *   body    — আসল ডেটা, JSON.stringify() দিয়ে সিরিয়ালাইজ করা
  *
- * @param {Event} event  The form's submit event
+ * @param {Event} event  ফর্মের submit ইভেন্ট
  */
 async function handleLogin(event) {
     event.preventDefault();
@@ -95,7 +95,7 @@ async function handleLogin(event) {
     btn.textContent = 'Signing in\u2026';
 
     try {
-        const res = await fetch(API_BASE_URL + 'auth.php', {
+        const res = await fetch(API_BASE_URL + 'auth', { // Changed to match Java endpoint
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'login', email, password })
@@ -104,7 +104,7 @@ async function handleLogin(event) {
         const data = await res.json();
 
         if (data.success) {
-            // Persist session — dashboard reads these on load
+            // সেশন সংরক্ষণ করুন — ড্যাশবোর্ড লোড হওয়ার সময় এগুলো পড়ে
             localStorage.setItem('user_id', data.user_id);
             localStorage.setItem('full_name', data.full_name);
 
@@ -114,7 +114,7 @@ async function handleLogin(event) {
             showToast(data.message || 'Login failed.', 'error');
         }
     } catch (err) {
-        // catch fires on network-level failures (server down, CORS blocked, etc.)
+        // নেটওয়ার্ক-স্তরের ব্যর্থতায় (সার্ভার ডাউন, CORS ব্লক, ইত্যাদি) catch কল হয়
         console.error('Login error:', err);
         showToast('Network error — is the backend running?', 'error');
     } finally {
@@ -127,14 +127,14 @@ async function handleLogin(event) {
 
 
 /**
- * handleRegister — processes the registration form.
+ * handleRegister — রেজিস্ট্রেশন ফর্ম প্রসেস করে।
  *
- * Extra validation vs login:
- *   - password length >= 6
- *   - password === confirm
+ * লগইনের তুলনায় অতিরিক্ত ভ্যালিডেশন:
+ *   - পাসওয়ার্ড দৈর্ঘ্য >= ৬
+ *   - পাসওয়ার্ড === কনফার্ম
  *
- * On success we DON'T auto-login; instead we switch to the Sign In
- * tab so the user consciously logs in with their new credentials.
+ * সফল হলে আমরা অটো-লগইন করি না; পরিবর্তে আমরা Sign In
+ * ট্যাবে স্যুইচ করি যাতে ব্যবহারকারী তাদের নতুন ক্রেডেনশিয়াল দিয়ে সজ্ঞানে লগইন করে।
  *
  * @param {Event} event
  */
@@ -164,7 +164,7 @@ async function handleRegister(event) {
     btn.textContent = 'Creating account\u2026';
 
     try {
-        const res = await fetch(API_BASE_URL + 'auth.php', {
+        const res = await fetch(API_BASE_URL + 'auth', { // Changed to match Java endpoint
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -197,12 +197,12 @@ async function handleRegister(event) {
 
 
 /**
- * showToast — renders a small notification that auto-dismisses.
+ * showToast — একটি ছোট নোটিফিকেশন দেখায় যা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যায়।
  *
- * We create a new DOM element each time (rather than toggling a
- * pre-existing one) so multiple toasts can stack if needed.
+ * আমরা প্রতিবার একটি নতুন DOM এলিমেন্ট তৈরি করি (আগে থেকে থাকা কোনোটি
+ * টগল করার পরিবর্তে) যাতে প্রয়োজনে একাধিক টোস্ট স্ট্যাক হতে পারে।
  *
- * @param {string} message  Text to display
+ * @param {string} message  যে টেক্সট দেখাতে হবে
  * @param {string} type     'success' | 'error' | 'info'
  */
 function showToast(message, type) {

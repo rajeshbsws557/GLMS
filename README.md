@@ -2,7 +2,7 @@
 
 A full-stack web application for tracking informal loans between friends and family. Record money you've lent or borrowed, log partial repayments, and see your net balance at a glance — all in a clean, mobile-friendly dashboard.
 
-> **Bakir Khata** loosely translates to a "credit ledger" — the digital equivalent of the classic notebook people use to keep track of who owes whom.
+> **Bakir Khata** (बकीर खाता) loosely translates to a "credit ledger" — the digital equivalent of the classic notebook people use to keep track of who owes whom.
 
 ---
 
@@ -25,9 +25,10 @@ A full-stack web application for tracking informal loans between friends and fam
 | Layer | Technology |
 |---|---|
 | **Frontend** | HTML, Vanilla JS, Tailwind CSS (CDN), Custom CSS |
-| **Backend** | PHP 8+ (REST API) |
-| **Database** | MySQL 8+ with PDO |
-| **Auth** | Bcrypt password hashing via `password_hash()` / `password_verify()` |
+| **Backend** | Java 17+ (No frameworks, pure `com.sun.net.httpserver.HttpServer`) |
+| **Database** | MySQL 8+ with JDBC (`java.sql.*`) |
+| **Auth** | Bcrypt password hashing via `jbcrypt` |
+| **Build/Dependencies**| Maven (`mysql-connector-j`, `gson`, `jbcrypt`) |
 
 ---
 
@@ -45,12 +46,17 @@ GLMS/
 │       ├── auth.js         # Login/register form handlers
 │       └── app.js          # Dashboard logic — CRUD for loans & repayments
 │
-├── backend/
-│   ├── db.php              # PDO connection + CORS headers
-│   ├── auth.php            # POST — register / login
-│   ├── contacts.php        # GET / POST — manage contacts
-│   ├── loans.php           # GET / POST — manage loans (with JOIN + subquery)
-│   └── repayments.php      # GET / POST — log repayments (transactional)
+├── java-backend/
+│   ├── pom.xml             # Maven configuration and dependencies
+│   └── src/main/java/com/bakir_khata/
+│       ├── Main.java               # HttpServer setup and routing
+│       ├── DatabaseHelper.java     # JDBC connection pooling (Singleton)
+│       └── handlers/
+│           ├── CorsUtil.java       # CORS headers and JSON responses
+│           ├── AuthHandler.java    # POST — register / login
+│           ├── ContactHandler.java # GET / POST — manage contacts
+│           ├── LoanHandler.java    # GET / POST — manage loans
+│           └── RepaymentHandler.java # GET / POST — log repayments (transactional)
 │
 ├── schema.sql              # Full database schema (CREATE DATABASE + 4 tables)
 └── README.md
@@ -73,7 +79,7 @@ Key design decisions:
 - **`DECIMAL(10,2)`** for monetary values (avoids floating-point rounding errors)
 - **`ENUM`** columns for `loan_type` and `status` (database-level validation)
 - **`ON DELETE CASCADE`** to prevent orphan records
-- **Database transactions** in `repayments.php` ensure atomic insert + status update
+- **Database transactions** in `RepaymentHandler.java` ensure atomic insert + status update
 
 ---
 
@@ -81,9 +87,10 @@ Key design decisions:
 
 ### Prerequisites
 
-- **PHP 8.0+** with PDO MySQL extension
+- **JDK 17+** (Java Development Kit)
+- **Apache Maven 3.x**
 - **MySQL 8.0+** (or MariaDB 10.5+)
-- A local web server — [XAMPP](https://www.apachefriends.org/), [WAMP](https://www.wampserver.com/), or [Laragon](https://laragon.org/)
+- A local web server — to serve the frontend (e.g. Live Server VS Code Extension, XAMPP, etc.)
 
 ### Setup
 
@@ -101,39 +108,45 @@ Key design decisions:
 
 3. **Configure the backend**
 
-   Edit `backend/db.php` and update the credentials if your MySQL setup differs from the defaults:
-   ```php
-   $db_host = 'localhost';
-   $db_name = 'personal_ledger';
-   $db_user = 'root';
-   $db_pass = '';           // your MySQL password
-   $db_port = '3306';
+   Edit `java-backend/src/main/java/com/bakir_khata/DatabaseHelper.java` and update the credentials if your MySQL setup differs from the defaults:
+   ```java
+   private static final String URL = "jdbc:mysql://localhost:3306/personal_ledger";
+   private static final String USER = "root";
+   private static final String PASS = "";
    ```
 
-4. **Configure the frontend**
+4. **Run the backend**
+   ```bash
+   cd java-backend
+   mvn clean compile
+   mvn exec:java -Dexec.mainClass="com.bakir_khata.Main"
+   ```
+   The server will start on `http://localhost:8080`.
 
-   Edit `frontend/js/config.js` and point it to your backend:
+5. **Configure the frontend**
+
+   Edit `frontend/js/config.js` and point it to your Java backend:
    ```js
-   const API_BASE_URL = 'http://localhost/GLMS/backend/';
+   const API_BASE_URL = 'http://localhost:8080/api/';
    ```
 
-5. **Start your web server** and open `http://localhost/GLMS/frontend/` in a browser.
+6. **Start your frontend server** and open `index.html` in a browser.
 
 ---
 
 ## 📡 API Reference
 
-All endpoints return JSON. The backend is a simple REST-style PHP API.
+All endpoints return JSON. The backend is a simple REST-style API powered by Java's built-in HttpServer.
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/auth.php` | Register (`action: "register"`) or Login (`action: "login"`) |
-| `GET` | `/contacts.php?user_id=1` | List all contacts for a user |
-| `POST` | `/contacts.php` | Add a new contact |
-| `GET` | `/loans.php?user_id=1` | Get all loans (with contact names and repayment totals) |
-| `POST` | `/loans.php` | Create a new loan |
-| `GET` | `/repayments.php?loan_id=5` | Get repayment history for a loan |
-| `POST` | `/repayments.php` | Log a repayment (auto-updates loan status via transaction) |
+| `POST` | `/api/auth` | Register (`action: "register"`) or Login (`action: "login"`) |
+| `GET` | `/api/contacts?user_id=1` | List all contacts for a user |
+| `POST` | `/api/contacts` | Add a new contact |
+| `GET` | `/api/loans?user_id=1` | Get all loans (with contact names and repayment totals) |
+| `POST` | `/api/loans` | Create a new loan |
+| `GET` | `/api/repayments?loan_id=5` | Get repayment history for a loan |
+| `POST` | `/api/repayments` | Log a repayment (auto-updates loan status via transaction) |
 
 ---
 
@@ -141,14 +154,15 @@ All endpoints return JSON. The backend is a simple REST-style PHP API.
 
 This project was built as a DBMS mini-project and showcases the following concepts:
 
-- **Prepared Statements** — All queries use named placeholders (`:param`) via PDO to prevent SQL injection
+- **Prepared Statements** — All queries use parameterized queries via JDBC to prevent SQL injection
 - **JOINs** — `INNER JOIN` between `loans` and `contacts` to fetch contact names alongside loan data
 - **Aggregate Functions** — `SUM()` with `COALESCE()` to compute total repayments
 - **Correlated Subqueries** — Per-loan repayment totals calculated inside the main SELECT
-- **Transactions (ACID)** — Repayment logging wraps INSERT + SUM + UPDATE in `beginTransaction()` / `commit()` / `rollBack()`
+- **Transactions (ACID)** — Repayment logging wraps INSERT + SUM + UPDATE in manual JDBC transactions (`conn.setAutoCommit(false)`, `commit()`, `rollback()`)
+- **Pessimistic Locking** — Used `FOR UPDATE` clause when fetching the loan record during repayment to prevent race conditions
 - **Foreign Keys & Cascading Deletes** — Referential integrity enforced at the schema level
 - **ENUM Types** — Database-level validation for `loan_type` and `status` columns
-- **Password Hashing** — Bcrypt via `password_hash()` with automatic salting
+- **Password Hashing** — Bcrypt via `jbcrypt` with automatic salting
 
 ---
 

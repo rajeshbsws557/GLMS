@@ -236,7 +236,7 @@ public class DatabaseHelper {
              */
             connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
-            System.out.println("✅ ডাটাবেস সংযোগ সফল! (MySQL — personal_ledger)");
+            System.out.println("✅ Database connection successful! (MySQL — personal_ledger)");
         }
         return connection;
     }
@@ -263,7 +263,7 @@ public class DatabaseHelper {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("🔒 ডাটাবেস সংযোগ বন্ধ করা হয়েছে।");
+                System.out.println("🔒 Database connection closed.");
             }
         } catch (SQLException e) {
             /*
@@ -277,7 +277,7 @@ public class DatabaseHelper {
              * সময় কানেকশন ইতিমধ্যে মরে গেলে close() ব্যর্থ হতে পারে —
              * এটি স্বাভাবিক এবং চিন্তার বিষয় নয়।
              */
-            System.err.println("⚠️ কানেকশন বন্ধ করতে সমস্যা: " + e.getMessage());
+            System.err.println("⚠️ Error closing connection: " + e.getMessage());
         }
     }
 }

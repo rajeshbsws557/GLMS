@@ -520,10 +520,10 @@ public class RepaymentHandler implements HttpHandler {
             if (conn != null) {
                 try {
                     conn.rollback();
-                    System.err.println("⚠️ Transaction rollback সফল — সব পরিবর্তন বাতিল।");
+                    System.err.println("⚠️ Transaction rollback successful — all changes discarded.");
                 } catch (SQLException rollbackEx) {
                     // rollback-ও ব্যর্থ হলে (অত্যন্ত বিরল, সাধারণত connection মরে গেলে)
-                    System.err.println("❌ Rollback-ও ব্যর্থ! কানেকশন সমস্যা: " + rollbackEx.getMessage());
+                    System.err.println("❌ Rollback also failed! Connection issue: " + rollbackEx.getMessage());
                 }
             }
 
@@ -553,7 +553,7 @@ public class RepaymentHandler implements HttpHandler {
                 try {
                     conn.setAutoCommit(true);
                 } catch (SQLException autoCommitEx) {
-                    System.err.println("⚠️ Auto-commit ফেরত দিতে সমস্যা: " + autoCommitEx.getMessage());
+                    System.err.println("⚠️ Error restoring auto-commit: " + autoCommitEx.getMessage());
                 }
             }
         }

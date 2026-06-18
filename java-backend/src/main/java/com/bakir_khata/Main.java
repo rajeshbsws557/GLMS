@@ -81,7 +81,7 @@ public class Main {
     // পোর্ট ব্যবহার করতে root/admin অনুমতি লাগে। 8080 conventionally
     // ডেভেলপমেন্ট সার্ভারের জন্য ব্যবহৃত হয়।
     // ========================================================================
-    private static final int PORT = 8080;
+    private static final int PORT = 9090;
 
     // ========================================================================
     // main() Method — প্রোগ্রামের শুরু
@@ -91,7 +91,7 @@ public class Main {
      *
      * public → JVM বাইরে থেকে কল করতে পারে
      * static → কোনো object তৈরি ছাড়াই কল করা যায়
-     * void   → কিছু ফেরত দেয় না
+     * void → কিছু ফেরত দেয় না
      * String[] args → কমান্ড লাইন আর্গুমেন্ট (যেমন: java Main --port 9090)
      *
      * @param args কমান্ড লাইন আর্গুমেন্ট (এই প্রোগ্রামে ব্যবহৃত হয় না)
@@ -108,11 +108,12 @@ public class Main {
         // ====================================================================
         try {
             DatabaseHelper.getInstance().getConnection();
-            System.out.println("✅ ডাটাবেস সংযোগ প্রস্তুত।");
+            System.out.println("✅ Database connection ready.");
         } catch (Exception e) {
-            System.err.println("❌ ডাটাবেস সংযোগ ব্যর্থ! সার্ভার শুরু করা যাচ্ছে না।");
-            System.err.println("   কারণ: " + e.getMessage());
-            System.err.println("   সমাধান: MySQL সার্ভার চালু আছে কিনা এবং personal_ledger ডাটাবেস আছে কিনা যাচাই করুন।");
+            System.err.println("❌ Database connection failed! Server cannot start.");
+            System.err.println("   Reason: " + e.getMessage());
+            System.err
+                    .println("   Solution: Check if MySQL server is running and personal_ledger database exists.");
             // System.exit(1) → প্রোগ্রাম থেকে বের হয়ে যায়
             // exit code 1 → ত্রুটি সহ বের হওয়া (0 = সফল)
             System.exit(1);
@@ -129,7 +130,7 @@ public class Main {
         // লুকিয়ে রাখে এবং ভবিষ্যতে বিভিন্ন ধরনের সার্ভার ফেরত দিতে পারে।
         //
         // InetSocketAddress → IP ঠিকানা + পোর্ট নম্বরের জোড়া
-        //   new InetSocketAddress(8080) → "0.0.0.0:8080" — সব IP-তে শুনবে
+        // new InetSocketAddress(8080) → "0.0.0.0:8080" — সব IP-তে শুনবে
         //
         // দ্বিতীয় প্যারামিটার (0) → backlog — একসাথে কতটি pending
         // connection রাখবে। 0 মানে সিস্টেম ডিফল্ট ব্যবহার করো।
@@ -142,23 +143,23 @@ public class Main {
         // createContext(path, handler) → এই path-এ request এলে এই handler কল হবে
         //
         // এটি PHP-র mod_rewrite বা .htaccess-এর সমতুল্য:
-        //   PHP: RewriteRule ^api/auth$ auth.php
-        //   Java: server.createContext("/api/auth", new AuthHandler())
+        // PHP: RewriteRule ^api/auth$ auth.php
+        // Java: server.createContext("/api/auth", new AuthHandler())
         //
         // প্রতিটি Handler হলো HttpHandler interface-এর implementation।
         //
         // OOP ধারণা → Interface (ইন্টারফেস):
         // HttpHandler হলো একটি interface যেখানে একটি method আছে:
-        //   void handle(HttpExchange exchange)
+        // void handle(HttpExchange exchange)
         // প্রতিটি Handler ক্লাস এই interface implement করে নিজের মতো
         // handle() method লেখে। এটি হলো "Polymorphism" — একই method
         // বিভিন্ন ক্লাসে বিভিন্নভাবে কাজ করে।
         //
         // Route ম্যাপিং:
-        //   /api/auth       → AuthHandler       (রেজিস্ট্রেশন ও লগইন)
-        //   /api/contacts   → ContactHandler    (যোগাযোগ তালিকা)
-        //   /api/loans      → LoanHandler       (ঋণ ব্যবস্থাপনা)
-        //   /api/repayments → RepaymentHandler  (পরিশোধ ব্যবস্থাপনা)
+        // /api/auth → AuthHandler (রেজিস্ট্রেশন ও লগইন)
+        // /api/contacts → ContactHandler (যোগাযোগ তালিকা)
+        // /api/loans → LoanHandler (ঋণ ব্যবস্থাপনা)
+        // /api/repayments → RepaymentHandler (পরিশোধ ব্যবস্থাপনা)
         // ====================================================================
         server.createContext("/api/auth", new AuthHandler());
         server.createContext("/api/contacts", new ContactHandler());
@@ -186,18 +187,18 @@ public class Main {
         server.start();
 
         System.out.println("========================================================");
-        System.out.println("  🚀 বাকির খাতা (Bakir Khata) — Java REST API সার্ভার");
-        System.out.println("  📡 পোর্ট: " + PORT);
-        System.out.println("  🌐 ঠিকানা: http://localhost:" + PORT);
+        System.out.println("  🚀 Bakir Khata (GLMS) — Java REST API Server");
+        System.out.println("  📡 Port: " + PORT);
+        System.out.println("  🌐 Address: http://localhost:" + PORT);
         System.out.println("  📋 Routes:");
-        System.out.println("     POST /api/auth       → রেজিস্ট্রেশন ও লগইন");
-        System.out.println("     GET  /api/contacts   → যোগাযোগ তালিকা দেখা");
-        System.out.println("     POST /api/contacts   → নতুন যোগাযোগ যোগ");
-        System.out.println("     GET  /api/loans      → ঋণ তালিকা দেখা");
-        System.out.println("     POST /api/loans      → নতুন ঋণ তৈরি");
-        System.out.println("     GET  /api/repayments → পরিশোধ ইতিহাস");
-        System.out.println("     POST /api/repayments → নতুন পরিশোধ যোগ");
-        System.out.println("  ⏹️  বন্ধ করতে: Ctrl+C");
+        System.out.println("     POST /api/auth       → Registration & Login");
+        System.out.println("     GET  /api/contacts   → View Contacts List");
+        System.out.println("     POST /api/contacts   → Add New Contact");
+        System.out.println("     GET  /api/loans      → View Loans List");
+        System.out.println("     POST /api/loans      → Create New Loan");
+        System.out.println("     GET  /api/repayments → View Repayment History");
+        System.out.println("     POST /api/repayments → Add New Repayment");
+        System.out.println("  ⏹️  To stop: Ctrl+C");
         System.out.println("========================================================");
 
         // ====================================================================
@@ -207,8 +208,8 @@ public class Main {
         // Ctrl+C চাপলে বা সিস্টেম বন্ধ হলে এই কোড execute হয়।
         //
         // এখানে আমরা:
-        //   ১. HTTP সার্ভার বন্ধ করি (0 = কোনো delay ছাড়া)
-        //   ২. ডাটাবেস কানেকশন বন্ধ করি (resource মুক্ত করা)
+        // ১. HTTP সার্ভার বন্ধ করি (0 = কোনো delay ছাড়া)
+        // ২. ডাটাবেস কানেকশন বন্ধ করি (resource মুক্ত করা)
         //
         // কেন এটি গুরুত্বপূর্ণ?
         // কানেকশন বন্ধ না করলে MySQL-এ "orphan connection" থেকে যায়,
@@ -221,10 +222,10 @@ public class Main {
         // এটি Inheritance (উত্তরাধিকার) ও Polymorphism-এর উদাহরণ।
         // ====================================================================
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("\n🛑 সার্ভার বন্ধ হচ্ছে...");
+            System.out.println("\n🛑 Server is shutting down...");
             server.stop(0);
             DatabaseHelper.getInstance().closeConnection();
-            System.out.println("✅ সার্ভার সফলভাবে বন্ধ হয়েছে। আল্লাহ হাফেজ! 👋");
+            System.out.println("✅ Server stopped successfully. Goodbye! 👋");
         }));
     }
 }

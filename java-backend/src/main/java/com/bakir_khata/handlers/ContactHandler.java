@@ -98,11 +98,17 @@ public class ContactHandler implements HttpHandler {
             case "POST":
                 addContact(exchange);
                 break;
+            case "PUT":
+                updateContact(exchange);
+                break;
+            case "DELETE":
+                deleteContact(exchange);
+                break;
             default:
                 // 405 Method Not Allowed
                 JsonObject error = new JsonObject();
                 error.addProperty("success", false);
-                error.addProperty("message", "Method not allowed. Use GET or POST.");
+                error.addProperty("message", "Method not allowed. Use GET, POST, PUT, or DELETE.");
                 CorsUtil.sendJsonResponse(exchange, 405, gson.toJson(error));
                 break;
         }
@@ -181,7 +187,7 @@ public class ContactHandler implements HttpHandler {
             // ORDER BY contact_name ASC → নাম অনুযায়ী বর্ণানুক্রমে সাজানো (A→Z)
             // PHP-র সমতুল্য query — হুবহু একই SQL।
             // ====================================================================
-            String sql = "SELECT contact_id, contact_name, phone_number " +
+            String sql = "SELECT contact_id, contact_name, email, phone_number " +
                          "FROM contacts WHERE user_id = ? ORDER BY contact_name ASC";
 
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -211,6 +217,13 @@ public class ContactHandler implements HttpHandler {
                         JsonObject contact = new JsonObject();
                         contact.addProperty("contact_id", rs.getInt("contact_id"));
                         contact.addProperty("contact_name", rs.getString("contact_name"));
+
+                        String email = rs.getString("email");
+                        if (email != null) {
+                            contact.addProperty("email", email);
+                        } else {
+                            contact.add("email", null);
+                        }
 
                         // phone_number nullable — getString() null ফেরত দিতে পারে
                         String phone = rs.getString("phone_number");
@@ -295,6 +308,12 @@ public class ContactHandler implements HttpHandler {
         int userId = data.get("user_id").getAsInt();
         String contactName = data.get("contact_name").getAsString().trim();
 
+        String email = null;
+        if (data.has("email") && !data.get("email").isJsonNull()) {
+            email = data.get("email").getAsString().trim();
+            if (email.isEmpty()) email = null;
+        }
+
         // phone_number ঐচ্ছিক (optional) — না থাকলে null
         String phoneNumber = null;
         if (data.has("phone_number") && !data.get("phone_number").isJsonNull()) {
@@ -318,7 +337,7 @@ public class ContactHandler implements HttpHandler {
             // Java-তে setNull() ব্যবহার করতে হয়, কারণ setString(3, null)
             // কিছু JDBC driver-এ সমস্যা তৈরি করতে পারে।
             // ====================================================================
-            String sql = "INSERT INTO contacts (user_id, contact_name, phone_number) VALUES (?, ?, ?)";
+            String sql = "INSERT INTO contacts (user_id, contact_name, email, phone_number) VALUES (?, ?, ?, ?)";
 
             try (PreparedStatement ps = conn.prepareStatement(sql,
                     PreparedStatement.RETURN_GENERATED_KEYS)) {
@@ -326,13 +345,17 @@ public class ContactHandler implements HttpHandler {
                 ps.setInt(1, userId);
                 ps.setString(2, contactName);
 
+                if (email != null) {
+                    ps.setString(3, email);
+                } else {
+                    ps.setNull(3, java.sql.Types.VARCHAR);
+                }
+
                 // nullable ফিল্ড হ্যান্ডেল করা
                 if (phoneNumber != null) {
-                    ps.setString(3, phoneNumber);
+                    ps.setString(4, phoneNumber);
                 } else {
-                    // setNull() → ডাটাবেসে NULL মান সেট করে
-                    // java.sql.Types.VARCHAR → কোন ধরনের column-এ NULL বসছে
-                    ps.setNull(3, java.sql.Types.VARCHAR);
+                    ps.setNull(4, java.sql.Types.VARCHAR);
                 }
 
                 ps.executeUpdate();
@@ -369,6 +392,145 @@ public class ContactHandler implements HttpHandler {
         }
     }
 
+
+    // ========================================================================
+    // updateContact() — contact আপডেট করা
+    // ========================================================================
+    private void updateContact(HttpExchange exchange) throws IOException {
+        String requestBody = readRequestBody(exchange);
+        JsonObject data;
+
+        try {
+            data = JsonParser.parseString(requestBody).getAsJsonObject();
+        } catch (Exception e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Invalid JSON in request body.");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        if (!data.has("user_id") || !data.has("contact_id") || !data.has("contact_name") ||
+            data.get("contact_name").getAsString().trim().isEmpty()) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Required fields: user_id, contact_id, contact_name.");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        int userId = data.get("user_id").getAsInt();
+        int contactId = data.get("contact_id").getAsInt();
+        String contactName = data.get("contact_name").getAsString().trim();
+
+        String email = null;
+        if (data.has("email") && !data.get("email").isJsonNull()) {
+            email = data.get("email").getAsString().trim();
+            if (email.isEmpty()) email = null;
+        }
+
+        String phoneNumber = null;
+        if (data.has("phone_number") && !data.get("phone_number").isJsonNull()) {
+            phoneNumber = data.get("phone_number").getAsString().trim();
+            if (phoneNumber.isEmpty()) phoneNumber = null;
+        }
+
+        try {
+            Connection conn = DatabaseHelper.getInstance().getConnection();
+            String sql = "UPDATE contacts SET contact_name = ?, email = ?, phone_number = ? WHERE contact_id = ? AND user_id = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, contactName);
+                if (email != null) {
+                    ps.setString(2, email);
+                } else {
+                    ps.setNull(2, java.sql.Types.VARCHAR);
+                }
+                if (phoneNumber != null) {
+                    ps.setString(3, phoneNumber);
+                } else {
+                    ps.setNull(3, java.sql.Types.VARCHAR);
+                }
+                ps.setInt(4, contactId);
+                ps.setInt(5, userId);
+
+                int rowsAffected = ps.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    JsonObject response = new JsonObject();
+                    response.addProperty("success", true);
+                    response.addProperty("message", "Contact updated successfully!");
+                    CorsUtil.sendJsonResponse(exchange, 200, gson.toJson(response));
+                } else {
+                    JsonObject error = new JsonObject();
+                    error.addProperty("success", false);
+                    error.addProperty("message", "Contact not found or you do not have permission to update it.");
+                    CorsUtil.sendJsonResponse(exchange, 404, gson.toJson(error));
+                }
+            }
+        } catch (SQLException e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Failed to update contact: " + e.getMessage());
+            CorsUtil.sendJsonResponse(exchange, 500, gson.toJson(error));
+        }
+    }
+
+    // ========================================================================
+    // deleteContact() — contact মুছে ফেলা
+    // ========================================================================
+    private void deleteContact(HttpExchange exchange) throws IOException {
+        Map<String, String> params = parseQueryParams(exchange);
+
+        if (!params.containsKey("user_id") || !params.containsKey("contact_id")) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Missing required parameters: user_id, contact_id");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        int userId, contactId;
+        try {
+            userId = Integer.parseInt(params.get("user_id"));
+            contactId = Integer.parseInt(params.get("contact_id"));
+        } catch (NumberFormatException e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "user_id and contact_id must be valid integers.");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        try {
+            Connection conn = DatabaseHelper.getInstance().getConnection();
+            String sql = "DELETE FROM contacts WHERE contact_id = ? AND user_id = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, contactId);
+                ps.setInt(2, userId);
+
+                int rowsAffected = ps.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    JsonObject response = new JsonObject();
+                    response.addProperty("success", true);
+                    response.addProperty("message", "Contact deleted successfully!");
+                    CorsUtil.sendJsonResponse(exchange, 200, gson.toJson(response));
+                } else {
+                    JsonObject error = new JsonObject();
+                    error.addProperty("success", false);
+                    error.addProperty("message", "Contact not found or you do not have permission to delete it.");
+                    CorsUtil.sendJsonResponse(exchange, 404, gson.toJson(error));
+                }
+            }
+        } catch (SQLException e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Failed to delete contact: " + e.getMessage());
+            CorsUtil.sendJsonResponse(exchange, 500, gson.toJson(error));
+        }
+    }
 
     // ========================================================================
     // parseQueryParams() — URL Query String থেকে প্যারামিটার Parse করা

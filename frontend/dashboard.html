@@ -74,6 +74,7 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
 
             <!-- অ্যাকশন বোতাম -->
             <div class="flex flex-wrap gap-2 mb-6">
+                <button onclick="openManageContactsModal()" class="btn btn-outline btn-sm">Manage Contacts</button>
                 <button onclick="openModal('modal-contact')" class="btn btn-outline btn-sm">+ Add Contact</button>
                 <button onclick="openModal('modal-loan')" class="btn btn-primary btn-sm">+ New Loan</button>
             </div>
@@ -120,6 +121,10 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                     <label for="contact-name" class="form-label">Name *</label>
                     <input type="text" id="contact-name" class="form-input" placeholder="e.g. Jane Doe" required>
                 </div>
+                <div class="mb-4">
+                    <label for="contact-email" class="form-label">Email (optional)</label>
+                    <input type="email" id="contact-email" class="form-input" placeholder="e.g. jane@example.com">
+                </div>
                 <div class="mb-5">
                     <label for="contact-phone" class="form-label">Phone (optional)</label>
                     <input type="tel" id="contact-phone" class="form-input" placeholder="e.g. +91-9876543210">
@@ -127,6 +132,52 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                 <div class="flex gap-2">
                     <button type="submit" class="btn btn-primary flex-1">Save</button>
                     <button type="button" onclick="closeModal('modal-contact')" class="btn btn-outline flex-1">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         মোডাল: Contacts Manage
+         ==================================================================== -->
+    <div id="modal-manage-contacts" class="modal-overlay" onclick="handleOverlayClick(event,'modal-manage-contacts')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">Manage Contacts</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-manage-contacts')">&times;</button>
+            </div>
+            <div id="manage-contacts-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
+                <!-- Contacts will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================================
+         মোডাল: Edit Contact
+         ==================================================================== -->
+    <div id="modal-edit-contact" class="modal-overlay" style="z-index: 60;" onclick="handleOverlayClick(event,'modal-edit-contact')">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-lg">Edit Contact</h3>
+                <button class="btn-ghost btn-sm" onclick="closeModal('modal-edit-contact')">&times;</button>
+            </div>
+            <form id="form-edit-contact" onsubmit="return handleEditContact(event)">
+                <input type="hidden" id="edit-contact-id">
+                <div class="mb-4">
+                    <label for="edit-contact-name" class="form-label">Name *</label>
+                    <input type="text" id="edit-contact-name" class="form-input" required>
+                </div>
+                <div class="mb-4">
+                    <label for="edit-contact-email" class="form-label">Email (optional)</label>
+                    <input type="email" id="edit-contact-email" class="form-input">
+                </div>
+                <div class="mb-5">
+                    <label for="edit-contact-phone" class="form-label">Phone (optional)</label>
+                    <input type="tel" id="edit-contact-phone" class="form-input">
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-1">Update</button>
+                    <button type="button" onclick="closeModal('modal-edit-contact')" class="btn btn-outline flex-1">Cancel</button>
                 </div>
             </form>
         </div>

@@ -7,8 +7,8 @@ import java.util.Properties;
 public class NotificationService {
 
     // প্রেরকের ইমেইল ঠিকানা এবং অ্যাপ পাসওয়ার্ড সংরক্ষণের জন্য ভেরিয়েবল
-    private static final String SENDER_EMAIL = "your_email@gmail.com";
-    private static final String APP_PASSWORD = "your_app_password_here";
+    private static final String SENDER_EMAIL = "gb03088844@gmail.com";
+    private static final String APP_PASSWORD = "pigr iwwk ppcj vewj";
 
     public static void sendEmail(String recipientEmail, String subject, String messageBody) {
 
@@ -40,11 +40,11 @@ public class NotificationService {
             // MimeMessage ক্লাসের মাধ্যমে আমরা একটি ইমেইল এর সম্পূর্ণ গঠন (যেমন- প্রাপক,
             // বিষয়বস্তু, মেসেজ বডি) তৈরি করি।
             Message message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(SENDER_EMAIL)); // প্রেরকের ঠিকানা নির্ধারণ করা
+            message.setFrom(new InternetAddress(SENDER_EMAIL, "Bakir Khata Notifications")); // প্রেরকের ঠিকানা নির্ধারণ করা
             message.setRecipient(Message.RecipientType.TO, new InternetAddress(recipientEmail)); // প্রাপকের ঠিকানা
                                                                                                  // নির্ধারণ করা
             message.setSubject(subject); // ইমেইলের মূল বিষয় বা সাবজেক্ট
-            message.setText(messageBody); // ইমেইলের ভেতরে থাকা আসল লেখা বা বডি
+            message.setContent(messageBody, "text/html; charset=utf-8"); // ইমেইলের ভেতরে থাকা আসল লেখা বা বডি (HTML)
 
             // ৪. ইমেইল পাঠানো:
             // Transport.send() মেথডটি পূর্বে তৈরি করা সেশন এবং কনফিগারেশন ব্যবহার করে
@@ -52,7 +52,7 @@ public class NotificationService {
             Transport.send(message);
             System.out.println("Success in sending the mail: " + recipientEmail);
 
-        } catch (MessagingException e) {
+        } catch (MessagingException | java.io.UnsupportedEncodingException e) {
             System.out.println("Failed to send the mail: " + e.getMessage());
             e.printStackTrace();
         }

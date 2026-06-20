@@ -18,10 +18,11 @@ public class DueLoanNotifier {
         // বর্তমান তারিখের সাথে ঠিক ১ দিন যোগ করে
         // আগামীকালের তারিখ বের করে। এর ফলে কোয়েরিটি শুধু সেই লোনগুলোই খুঁজে বের করবে
         // যেগুলোর পরিশোধের শেষ দিন আগামীকাল।
-        String query = "SELECT c.email, u.name AS user_name, l.amount " +
+        String query = "SELECT u.email AS user_email, u.full_name AS user_name, " +
+                "c.email AS contact_email, c.contact_name, l.amount, l.loan_type " +
                 "FROM loans l " +
-                "INNER JOIN contacts c ON l.contact_id = c.id " +
-                "INNER JOIN users u ON l.user_id = u.id " +
+                "INNER JOIN contacts c ON l.contact_id = c.contact_id " +
+                "INNER JOIN users u ON l.user_id = u.user_id " +
                 "WHERE l.status != 'Settled' " +
                 "AND l.due_date = CURDATE() + INTERVAL 1 DAY";
 
@@ -36,20 +37,51 @@ public class DueLoanNotifier {
             // প্রতিটি সারি থেকে আমরা ইমেইল, ইউজারের নাম এবং লোনের পরিমাণ সংগ্রহ করে
             // নোটিফিকেশন সার্ভিসের কাছে পাঠাবো।
             while (rs.next()) {
-                String email = rs.getString("email");
+                String userEmail = rs.getString("user_email");
                 String userName = rs.getString("user_name");
+                String contactEmail = rs.getString("contact_email");
+                String contactName = rs.getString("contact_name");
                 double amount = rs.getDouble("amount");
+                String loanType = rs.getString("loan_type");
 
-                // ইমেইলের সাবজেক্ট এবং মূল মেসেজ তৈরি করা হচ্ছে
                 String subject = "Loan Due Reminder";
-                String message = "Dear " + userName + ",\n\n" +
-                        "Your loan of " + amount + " taka is due tomorrow. " +
-                        "Please repay the loan on time.\n\nThank you.";
+                String recipientEmail = null;
+                String message = "";
+
+                if ("Lent".equalsIgnoreCase(loanType)) {
+                    // User lent money to the contact. So the contact should repay the user.
+                    // Notify the contact.
+                    recipientEmail = contactEmail;
+                    message = "<html><body style='font-family: sans-serif; color: #333;'>" +
+                            "<div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;'>" +
+                            "<h2 style='color: #2563eb;'>Bakir Khata Reminder</h2>" +
+                            "<p>Dear <strong>" + contactName + "</strong>,</p>" +
+                            "<p>This is a friendly reminder that your loan of <strong>" + amount + " taka</strong> from <strong>" + userName + "</strong> is due tomorrow.</p>" +
+                            "<p>Please ensure you repay the loan on time.</p>" +
+                            "<br><p>Thank you,<br>Bakir Khata Team</p>" +
+                            "<hr style='border: none; border-top: 1px solid #eaeaea; margin-top: 20px;'>" +
+                            "<p style='font-size: 12px; color: #888;'>You are receiving this automated notification because you are registered as a contact in Bakir Khata.</p>" +
+                            "</div></body></html>";
+                } else if ("Borrowed".equalsIgnoreCase(loanType)) {
+                    // User borrowed money from the contact. The user should repay the contact.
+                    // Notify the user.
+                    recipientEmail = userEmail;
+                    message = "<html><body style='font-family: sans-serif; color: #333;'>" +
+                            "<div style='max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;'>" +
+                            "<h2 style='color: #2563eb;'>Bakir Khata Reminder</h2>" +
+                            "<p>Dear <strong>" + userName + "</strong>,</p>" +
+                            "<p>This is a friendly reminder that your loan of <strong>" + amount + " taka</strong> to <strong>" + contactName + "</strong> is due tomorrow.</p>" +
+                            "<p>Please ensure you repay the loan on time.</p>" +
+                            "<br><p>Thank you,<br>Bakir Khata Team</p>" +
+                            "<hr style='border: none; border-top: 1px solid #eaeaea; margin-top: 20px;'>" +
+                            "<p style='font-size: 12px; color: #888;'>You are receiving this automated notification because you use Bakir Khata.</p>" +
+                            "</div></body></html>";
+                }
 
                 // ইমেইল ঠিকানা খালি না থাকলে আমাদের তৈরি করা NotificationService এর মাধ্যমে
                 // ইমেইল পাঠিয়ে দেওয়া হচ্ছে
-                if (email != null && !email.trim().isEmpty()) {
-                    NotificationService.sendEmail(email, subject, message);
+                if (recipientEmail != null && !recipientEmail.trim().isEmpty()) {
+                    NotificationService.sendEmail(recipientEmail, subject, message);
                 }
             }
 

@@ -99,6 +99,7 @@ CREATE TABLE contacts (
     contact_id INT AUTO_INCREMENT PRIMARY KEY,    -- প্রতিটি কন্টাক্টের জন্য অনন্য শনাক্তকারী
     user_id INT NOT NULL,                         -- এই কন্টাক্টটি কোন ব্যবহারকারীর
     contact_name VARCHAR(100) NOT NULL,           -- বন্ধু/পরিবারের সদস্যের নাম
+    email VARCHAR(100),                           -- ঐচ্ছিক ইমেইল ঠিকানা
     phone_number VARCHAR(15),                     -- ঐচ্ছিক ফোন নম্বর
 
     -- FOREIGN KEY কনস্ট্রেইন্ট:

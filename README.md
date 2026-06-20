@@ -11,12 +11,13 @@ A full-stack web application for tracking informal loans between friends and fam
 | Feature | Description |
 |---|---|
 | **User Authentication** | Register and sign in with email and password (bcrypt-hashed) |
-| **Contact Book** | Maintain a list of friends/family you transact with |
+| **Contact Book** | Maintain a list of friends/family you transact with. Supports real-time editing and deletion. |
 | **Loan Tracking** | Record loans as *Lent* (they owe you) or *Borrowed* (you owe them) with date, due date, and notes |
 | **Partial Repayments** | Log repayments against any loan; the system auto-calculates the remaining balance |
 | **Auto Status Updates** | Loan status transitions automatically: `Unpaid → Partially Paid → Settled` |
 | **Dashboard Summary** | See total lent, total borrowed, outstanding amounts, and net balance |
 | **Repayment History** | View the full repayment timeline for any individual loan |
+| **Email Notifications** | Automated HTML email reminders sent for due loans using a background daemon |
 
 ---
 
@@ -143,8 +144,11 @@ All endpoints return JSON. The backend is a simple REST-style API powered by Jav
 | `POST` | `/api/auth` | Register (`action: "register"`) or Login (`action: "login"`) |
 | `GET` | `/api/contacts?user_id=1` | List all contacts for a user |
 | `POST` | `/api/contacts` | Add a new contact |
+| `PUT` | `/api/contacts` | Update an existing contact |
+| `DELETE`| `/api/contacts?user_id=1&contact_id=1` | Delete a contact (cascades to loans/repayments) |
 | `GET` | `/api/loans?user_id=1` | Get all loans (with contact names and repayment totals) |
 | `POST` | `/api/loans` | Create a new loan |
+| `DELETE`| `/api/loans?user_id=1&loan_id=1` | Delete an individual loan (cascades to repayments) |
 | `GET` | `/api/repayments?loan_id=5` | Get repayment history for a loan |
 | `POST` | `/api/repayments` | Log a repayment (auto-updates loan status via transaction) |
 

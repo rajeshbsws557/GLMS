@@ -219,10 +219,12 @@ function createLoanCard(loan) {
     if (loan.status !== 'Settled') {
         actions =
             '<button onclick="openRepaymentModal(' + loan.loan_id + ')" class="btn btn-outline btn-sm flex-1">Log Payment</button>' +
-            '<button onclick="viewRepaymentHistory(' + loan.loan_id + ')" class="btn btn-ghost btn-sm flex-1">History</button>';
+            '<button onclick="viewRepaymentHistory(' + loan.loan_id + ')" class="btn btn-ghost btn-sm flex-1">History</button>' +
+            '<button onclick="handleDeleteLoan(' + loan.loan_id + ')" class="btn btn-ghost btn-sm" style="color:var(--red)" title="Delete Loan">&times;</button>';
     } else {
         actions =
-            '<button onclick="viewRepaymentHistory(' + loan.loan_id + ')" class="btn btn-ghost btn-sm flex-1">View History</button>';
+            '<button onclick="viewRepaymentHistory(' + loan.loan_id + ')" class="btn btn-ghost btn-sm flex-1">View History</button>' +
+            '<button onclick="handleDeleteLoan(' + loan.loan_id + ')" class="btn btn-ghost btn-sm" style="color:var(--red)" title="Delete Loan">&times;</button>';
     }
 
     return '' +
@@ -319,6 +321,7 @@ async function handleAddContact(event) {
     event.preventDefault();
 
     var name  = document.getElementById('contact-name').value.trim();
+    var email = document.getElementById('contact-email').value.trim();
     var phone = document.getElementById('contact-phone').value.trim();
 
     if (!name) { showToast('Enter a contact name.', 'error'); return false; }
@@ -330,6 +333,7 @@ async function handleAddContact(event) {
             body: JSON.stringify({
                 user_id: currentUserId,
                 contact_name: name,
+                email: email || null,
                 phone_number: phone || null
             })
         });
@@ -539,6 +543,135 @@ async function viewRepaymentHistory(loanId) {
     } catch (e) {
         console.error(e);
         showToast('Failed to load history.', 'error');
+    }
+}
+
+// ===========================================================================
+//  Manage Contacts & Deletions
+// ===========================================================================
+
+function openManageContactsModal() {
+    renderContactsManageList();
+    openModal('modal-manage-contacts');
+}
+
+function renderContactsManageList() {
+    var box = document.getElementById('manage-contacts-list');
+    if (contactsList.length === 0) {
+        box.innerHTML = '<p class="empty-msg">No contacts available.</p>';
+        return;
+    }
+    
+    var html = '';
+    contactsList.forEach(function(c) {
+        var emailStr = c.email ? c.email : 'No email';
+        var phoneStr = c.phone_number ? c.phone_number : 'No phone';
+        html += '<div class="card mb-2" style="padding: 0.75rem;">' +
+            '<div class="flex justify-between items-center">' +
+                '<div>' +
+                    '<p class="font-medium">' + escapeHtml(c.contact_name) + '</p>' +
+                    '<p class="text-xs" style="color:var(--text-dim)">' + escapeHtml(emailStr) + ' &middot; ' + escapeHtml(phoneStr) + '</p>' +
+                '</div>' +
+                '<div class="flex gap-2">' +
+                    '<button onclick="openEditContactModal(' + c.contact_id + ')" class="btn btn-ghost btn-sm text-blue-500">Edit</button>' +
+                    '<button onclick="handleDeleteContact(' + c.contact_id + ')" class="btn btn-ghost btn-sm text-red-500">Delete</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+    });
+    box.innerHTML = html;
+}
+
+function openEditContactModal(contactId) {
+    var contact = contactsList.find(function(c) { return c.contact_id === contactId; });
+    if (!contact) return;
+    
+    document.getElementById('edit-contact-id').value = contact.contact_id;
+    document.getElementById('edit-contact-name').value = contact.contact_name;
+    document.getElementById('edit-contact-email').value = contact.email || '';
+    document.getElementById('edit-contact-phone').value = contact.phone_number || '';
+    
+    openModal('modal-edit-contact');
+}
+
+async function handleEditContact(event) {
+    event.preventDefault();
+    var contactId = document.getElementById('edit-contact-id').value;
+    var name = document.getElementById('edit-contact-name').value.trim();
+    var email = document.getElementById('edit-contact-email').value.trim();
+    var phone = document.getElementById('edit-contact-phone').value.trim();
+    
+    if (!name) return false;
+    
+    try {
+        var res = await fetch(API_BASE_URL + 'contacts', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: parseInt(currentUserId, 10),
+                contact_id: parseInt(contactId, 10),
+                contact_name: name,
+                email: email || null,
+                phone_number: phone || null
+            })
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('Contact updated successfully.', 'success');
+            closeModal('modal-edit-contact');
+            await loadContacts();
+            await loadLoans(); // names might have changed
+            renderContactsManageList();
+        } else {
+            showToast(data.message || 'Failed to update contact.', 'error');
+        }
+    } catch (e) {
+        showToast('Network error.', 'error');
+    }
+    return false;
+}
+
+async function handleDeleteContact(contactId) {
+    if (!confirm('Are you sure you want to delete this contact? All their loans and repayment history will also be permanently deleted!')) {
+        return;
+    }
+    
+    try {
+        var res = await fetch(API_BASE_URL + 'contacts?contact_id=' + contactId + '&user_id=' + currentUserId, {
+            method: 'DELETE'
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('Contact deleted.', 'success');
+            await loadContacts();
+            await loadLoans(); // remove their loans
+            renderContactsManageList();
+        } else {
+            showToast(data.message || 'Failed to delete contact.', 'error');
+        }
+    } catch (e) {
+        showToast('Network error.', 'error');
+    }
+}
+
+async function handleDeleteLoan(loanId) {
+    if (!confirm('Are you sure you want to delete this loan? All repayment history will be permanently lost!')) {
+        return;
+    }
+    
+    try {
+        var res = await fetch(API_BASE_URL + 'loans?loan_id=' + loanId + '&user_id=' + currentUserId, {
+            method: 'DELETE'
+        });
+        var data = await res.json();
+        if (data.success) {
+            showToast('Loan deleted.', 'success');
+            await loadLoans();
+        } else {
+            showToast(data.message || 'Failed to delete loan.', 'error');
+        }
+    } catch (e) {
+        showToast('Network error.', 'error');
     }
 }
 

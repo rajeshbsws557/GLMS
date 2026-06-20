@@ -93,10 +93,13 @@ public class LoanHandler implements HttpHandler {
             case "POST":
                 addLoan(exchange);
                 break;
+            case "DELETE":
+                deleteLoan(exchange);
+                break;
             default:
                 JsonObject error = new JsonObject();
                 error.addProperty("success", false);
-                error.addProperty("message", "Method not allowed. Use GET or POST.");
+                error.addProperty("message", "Method not allowed. Use GET, POST, or DELETE.");
                 CorsUtil.sendJsonResponse(exchange, 405, gson.toJson(error));
                 break;
         }
@@ -465,6 +468,63 @@ public class LoanHandler implements HttpHandler {
                 error.addProperty("message", "Failed to create loan: " + e.getMessage());
                 CorsUtil.sendJsonResponse(exchange, 500, gson.toJson(error));
             }
+        }
+    }
+
+
+    // ========================================================================
+    // deleteLoan() — ঋণ মুছে ফেলা
+    // ========================================================================
+    private void deleteLoan(HttpExchange exchange) throws IOException {
+        Map<String, String> params = parseQueryParams(exchange);
+
+        if (!params.containsKey("user_id") || !params.containsKey("loan_id")) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Missing required parameters: user_id, loan_id");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        int userId, loanId;
+        try {
+            userId = Integer.parseInt(params.get("user_id"));
+            loanId = Integer.parseInt(params.get("loan_id"));
+        } catch (NumberFormatException e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "user_id and loan_id must be valid integers.");
+            CorsUtil.sendJsonResponse(exchange, 400, gson.toJson(error));
+            return;
+        }
+
+        try {
+            Connection conn = DatabaseHelper.getInstance().getConnection();
+            String sql = "DELETE FROM loans WHERE loan_id = ? AND user_id = ?";
+
+            try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setInt(1, loanId);
+                ps.setInt(2, userId);
+
+                int rowsAffected = ps.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    JsonObject response = new JsonObject();
+                    response.addProperty("success", true);
+                    response.addProperty("message", "Loan deleted successfully!");
+                    CorsUtil.sendJsonResponse(exchange, 200, gson.toJson(response));
+                } else {
+                    JsonObject error = new JsonObject();
+                    error.addProperty("success", false);
+                    error.addProperty("message", "Loan not found or you do not have permission to delete it.");
+                    CorsUtil.sendJsonResponse(exchange, 404, gson.toJson(error));
+                }
+            }
+        } catch (SQLException e) {
+            JsonObject error = new JsonObject();
+            error.addProperty("success", false);
+            error.addProperty("message", "Failed to delete loan: " + e.getMessage());
+            CorsUtil.sendJsonResponse(exchange, 500, gson.toJson(error));
         }
     }
 

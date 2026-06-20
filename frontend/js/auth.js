@@ -1,47 +1,9 @@
-/**
- * ============================================================================
- * ফাইল: auth.js — লগইন ও রেজিস্ট্রেশন লজিক
- * ============================================================================
- * 
- * যা হ্যান্ডেল করে:
- *   ১. Sign In / Create Account ট্যাবের মধ্যে স্যুইচ করা
- *   ২. লগইন — auth-এ POST রিকোয়েস্ট, localStorage-এ সেশন সংরক্ষণ
- *   ৩. রেজিস্ট্রেশন — auth-এ POST রিকোয়েস্ট, তারপর লগইন ট্যাবে রিডাইরেক্ট
- *   ৪. সাফল্য/ত্রুটি ফিডব্যাকের জন্য টোস্ট নোটিফিকেশন
- * 
- * ভাইভার জন্য মূল ধারণা:
- * 
- * fetch() — HTTP রিকোয়েস্ট করার আধুনিক উপায়; একটি Promise রিটার্ন করে।
- * async/await — Promise-এর উপর syntactic sugar; .then() কলব্যাক চেইনের
- *   পরিবর্তে আমাদের অ্যাসিনক্রোনাস কোড লিখতে দেয় যা উপর থেকে নিচে পড়া যায়।
- * localStorage — ব্রাউজারের key-value স্টোর যা পৃষ্ঠা রিলোড করার পরেও থাকে।
- *   আমরা user_id + full_name এখানে রাখি যাতে ড্যাশবোর্ড জানে কে লগইন করেছে।
- *   প্রোডাকশনের জন্য নিরাপদ নয় (যেকোনো JS এটি পড়তে পারে); ডেমোর জন্য ঠিক আছে।
- * event.preventDefault() — ব্রাউজারের ডিফল্ট ফর্ম সাবমিট বন্ধ করে (যা
- *   পৃষ্ঠা রিলোড করত এবং আমাদের JS স্টেট হারিয়ে যেত)।
- * ============================================================================
- */
-
-// ব্যবহারকারী যদি ইতিমধ্যে লগইন করে থাকেন, তাহলে সরাসরি ড্যাশবোর্ডে যান।
-// এটি একটি IIFE-তে মোড়ানো যাতে স্ক্রিপ্ট লোড হওয়ার সাথে সাথে এটি চলে
-// গ্লোবাল স্কোপে ভেরিয়েবল লিক না করে।
 (function checkExistingSession() {
     if (localStorage.getItem('user_id')) {
         window.location.href = 'dashboard.html';
     }
 })();
 
-
-/**
- * switchTab — লগইন এবং রেজিস্টার ফর্মের দৃশ্যমানতা টগল করে।
- *
- * ব্যবহৃত DOM মেথড:
- *   getElementById() — HTML id দিয়ে একটি নির্দিষ্ট এলিমেন্ট ধরুন
- *   .style.display   — CSS ডিসপ্লে প্রপার্টি ('block' = দৃশ্যমান, 'none' = লুকানো)
- *   .classList.add / .remove — স্টাইলিংয়ের জন্য CSS ক্লাস টগল করুন
- *
- * @param {string} tab  হয় 'login' অথবা 'register'
- */
 function switchTab(tab) {
     const loginForm    = document.getElementById('form-login');
     const registerForm = document.getElementById('form-register');
@@ -61,24 +23,6 @@ function switchTab(tab) {
     }
 }
 
-
-/**
- * handleLogin — লগইন ফর্ম প্রসেস করে।
- *
- * ফ্লো (Flow):
- *  ১. ডিফল্ট ফর্ম সাবমিশন (পৃষ্ঠা রিলোড) প্রতিরোধ করুন
- *  ২. ইনপুট থেকে ইমেইল + পাসওয়ার্ড ধরুন
- *  ৩. action:"login" সহ auth API-তে JSON POST করুন
- *  ৪. সফল হলে → user_id এবং full_name সংরক্ষণ করুন, ড্যাশবোর্ডে রিডাইরেক্ট করুন
- *  ৫. ব্যর্থ হলে → এরর টোস্ট দেখান
- *
- * fetch() অপশন ব্যাখ্যা:
- *   method  — HTTP verb (এখানে POST কারণ আমরা ক্রেডেনশিয়াল পাঠাচ্ছি)
- *   headers — ব্যাকএন্ডকে বলে যে আমরা JSON পাঠাচ্ছি
- *   body    — আসল ডেটা, JSON.stringify() দিয়ে সিরিয়ালাইজ করা
- *
- * @param {Event} event  ফর্মের submit ইভেন্ট
- */
 async function handleLogin(event) {
     event.preventDefault();
 
@@ -95,7 +39,7 @@ async function handleLogin(event) {
     btn.textContent = 'Signing in\u2026';
 
     try {
-        const res = await fetch(API_BASE_URL + 'auth', { // Changed to match Java endpoint
+        const res = await fetch(API_BASE_URL + 'auth', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'login', email, password })
@@ -104,7 +48,7 @@ async function handleLogin(event) {
         const data = await res.json();
 
         if (data.success) {
-            // সেশন সংরক্ষণ করুন — ড্যাশবোর্ড লোড হওয়ার সময় এগুলো পড়ে
+
             localStorage.setItem('user_id', data.user_id);
             localStorage.setItem('full_name', data.full_name);
 
@@ -114,7 +58,7 @@ async function handleLogin(event) {
             showToast(data.message || 'Login failed.', 'error');
         }
     } catch (err) {
-        // নেটওয়ার্ক-স্তরের ব্যর্থতায় (সার্ভার ডাউন, CORS ব্লক, ইত্যাদি) catch কল হয়
+
         console.error('Login error:', err);
         showToast('Network error — is the backend running?', 'error');
     } finally {
@@ -125,19 +69,6 @@ async function handleLogin(event) {
     return false;
 }
 
-
-/**
- * handleRegister — রেজিস্ট্রেশন ফর্ম প্রসেস করে।
- *
- * লগইনের তুলনায় অতিরিক্ত ভ্যালিডেশন:
- *   - পাসওয়ার্ড দৈর্ঘ্য >= ৬
- *   - পাসওয়ার্ড === কনফার্ম
- *
- * সফল হলে আমরা অটো-লগইন করি না; পরিবর্তে আমরা Sign In
- * ট্যাবে স্যুইচ করি যাতে ব্যবহারকারী তাদের নতুন ক্রেডেনশিয়াল দিয়ে সজ্ঞানে লগইন করে।
- *
- * @param {Event} event
- */
 async function handleRegister(event) {
     event.preventDefault();
 
@@ -164,7 +95,7 @@ async function handleRegister(event) {
     btn.textContent = 'Creating account\u2026';
 
     try {
-        const res = await fetch(API_BASE_URL + 'auth', { // Changed to match Java endpoint
+        const res = await fetch(API_BASE_URL + 'auth', { 
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -195,16 +126,6 @@ async function handleRegister(event) {
     return false;
 }
 
-
-/**
- * showToast — একটি ছোট নোটিফিকেশন দেখায় যা স্বয়ংক্রিয়ভাবে বন্ধ হয়ে যায়।
- *
- * আমরা প্রতিবার একটি নতুন DOM এলিমেন্ট তৈরি করি (আগে থেকে থাকা কোনোটি
- * টগল করার পরিবর্তে) যাতে প্রয়োজনে একাধিক টোস্ট স্ট্যাক হতে পারে।
- *
- * @param {string} message  যে টেক্সট দেখাতে হবে
- * @param {string} type     'success' | 'error' | 'info'
- */
 function showToast(message, type) {
     type = type || 'info';
     var container = document.getElementById('toast-container');

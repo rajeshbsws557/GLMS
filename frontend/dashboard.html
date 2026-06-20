@@ -1,17 +1,5 @@
 <!DOCTYPE html>
-<!--
-============================================================================
-ফাইল: dashboard.html — মূল ড্যাশবোর্ড
-============================================================================
 
-ব্যবহারকারীর ঋণগুলো দুটি তালিকায় ভাগ করে দেখায়: "আমার পাওনা" এবং
-"আমার দেনা"। উপরে সারসংক্ষেপ পরিসংখ্যান এবং contact যোগ, ঋণ তৈরি,
-ও পরিশোধ রেকর্ড করার জন্য modal আছে।
-
-সব ডেটা JavaScript দিয়ে গতিশীলভাবে লোড হয় — HTML শুধু কাঠামো।
-app.js API থেকে ডেটা আনার পর ঋণ কার্ডগুলো পূরণ করে।
-============================================================================
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -24,12 +12,8 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
 </head>
 <body>
 
-    <!-- টোস্ট -->
     <div id="toast-container" class="toast-wrap"></div>
 
-    <!-- ====================================================================
-         হেডার
-         ==================================================================== -->
     <header class="app-header">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <h1 class="text-lg font-bold tracking-tight">Bakir Khata</h1>
@@ -42,18 +26,13 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
 
     <main class="max-w-6xl mx-auto px-4 py-6">
 
-        <!-- লোডিং স্পিনার (ডেটা আসলে লুকিয়ে যায়) -->
         <div id="loading-state" class="flex flex-col items-center py-20" style="color:var(--text-faint)">
             <svg class="animate-spin mb-3" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2v4m0 12v4m-7.07-3.93l2.83-2.83m8.49-8.49l2.83-2.83M2 12h4m12 0h4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83"/></svg>
             <p>Loading your khata&hellip;</p>
         </div>
 
-        <!-- ================================================================
-             মূল বিষয়বস্তু (ডেটা লোড না হওয়া পর্যন্ত লুকানো)
-             ================================================================ -->
         <div id="main-content" style="display:none">
 
-            <!-- সারসংক্ষেপ সারি -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
                 <div class="card">
                     <p class="stat-label">Total Lent</p>
@@ -72,17 +51,14 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                 </div>
             </div>
 
-            <!-- অ্যাকশন বোতাম -->
             <div class="flex flex-wrap gap-2 mb-6">
                 <button onclick="openManageContactsModal()" class="btn btn-outline btn-sm">Manage Contacts</button>
                 <button onclick="openModal('modal-contact')" class="btn btn-outline btn-sm">+ Add Contact</button>
                 <button onclick="openModal('modal-loan')" class="btn btn-primary btn-sm">+ New Loan</button>
             </div>
 
-            <!-- দুই-কলাম ঋণ তালিকা -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                <!-- ধার দেওয়া (Lent) -->
                 <section>
                     <div class="flex items-center gap-2 mb-3">
                         <h2 class="font-semibold text-base">Money I'm Owed</h2>
@@ -93,7 +69,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                     </div>
                 </section>
 
-                <!-- ধার নেওয়া (Borrowed) -->
                 <section>
                     <div class="flex items-center gap-2 mb-3">
                         <h2 class="font-semibold text-base">Money I Owe</h2>
@@ -107,9 +82,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
         </div>
     </main>
 
-    <!-- ====================================================================
-         মোডাল: Contact যোগ করুন
-         ==================================================================== -->
     <div id="modal-contact" class="modal-overlay" onclick="handleOverlayClick(event,'modal-contact')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
@@ -137,9 +109,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
         </div>
     </div>
 
-    <!-- ====================================================================
-         মোডাল: Contacts Manage
-         ==================================================================== -->
     <div id="modal-manage-contacts" class="modal-overlay" onclick="handleOverlayClick(event,'modal-manage-contacts')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
@@ -147,14 +116,11 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                 <button class="btn-ghost btn-sm" onclick="closeModal('modal-manage-contacts')">&times;</button>
             </div>
             <div id="manage-contacts-list" class="space-y-3 max-h-96 overflow-y-auto pr-2">
-                <!-- Contacts will be populated here -->
+
             </div>
         </div>
     </div>
 
-    <!-- ====================================================================
-         মোডাল: Edit Contact
-         ==================================================================== -->
     <div id="modal-edit-contact" class="modal-overlay" style="z-index: 60;" onclick="handleOverlayClick(event,'modal-edit-contact')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
@@ -183,9 +149,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
         </div>
     </div>
 
-    <!-- ====================================================================
-         মোডাল: নতুন ঋণ তৈরি
-         ==================================================================== -->
     <div id="modal-loan" class="modal-overlay" onclick="handleOverlayClick(event,'modal-loan')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
@@ -233,9 +196,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
         </div>
     </div>
 
-    <!-- ====================================================================
-         মোডাল: পরিশোধ রেকর্ড
-         ==================================================================== -->
     <div id="modal-repayment" class="modal-overlay" onclick="handleOverlayClick(event,'modal-repayment')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">
@@ -243,7 +203,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
                 <button class="btn-ghost btn-sm" onclick="closeModal('modal-repayment')">&times;</button>
             </div>
 
-            <!-- ঋণের সারসংক্ষেপ (JS দ্বারা পূরণ হয়) -->
             <div id="repayment-loan-info" class="card mb-4" style="padding:0.85rem">
                 <p id="repayment-contact" class="font-medium text-sm"></p>
                 <div class="flex justify-between text-xs mt-1" style="color:var(--text-dim)">
@@ -270,9 +229,6 @@ app.js API থেকে ডেটা আনার পর ঋণ কার্ড�
         </div>
     </div>
 
-    <!-- ====================================================================
-         মোডাল: পরিশোধ ইতিহাস
-         ==================================================================== -->
     <div id="modal-history" class="modal-overlay" onclick="handleOverlayClick(event,'modal-history')">
         <div class="modal-box" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-4">

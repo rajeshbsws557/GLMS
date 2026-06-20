@@ -1,0 +1,14 @@
+[Unit]
+Description=GLMS Java Backend
+After=network.target mariadb.service
+
+[Service]
+User=root
+WorkingDirectory=/home/openclaw/GLMS/java-backend/target
+ExecStart=/usr/bin/java -jar bakir-khata-api-1.0.0.jar
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,44 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-    ============================================================================
-    pom.xml — Maven প্রজেক্ট কনফিগারেশন ফাইল (Project Object Model)
-    ============================================================================
 
-    Maven কী?
-    Maven হলো একটি "বিল্ড টুল" যা Java প্রজেক্টের dependency (বাহ্যিক লাইব্রেরি),
-    compilation (কোড কম্পাইল), এবং packaging (JAR ফাইল তৈরি) স্বয়ংক্রিয়ভাবে
-    পরিচালনা করে। pom.xml ফাইলটি Maven-কে বলে দেয় প্রজেক্টের কী কী দরকার।
-
-    আমাদের নীতি: শুধুমাত্র ৩টি dependency ব্যবহার করা হবে:
-      ১. mysql-connector-j → MySQL ডাটাবেসের সাথে Java কে সংযুক্ত করার JDBC ড্রাইভার
-      ২. gson             → Google-এর JSON parsing লাইব্রেরি (JSON ↔ Java Object)
-      ৩. jbcrypt          → পাসওয়ার্ড hashing-এর জন্য BCrypt অ্যালগরিদম
-
-    কোনো Spring Boot, Jakarta EE, বা অন্য কোনো web framework ব্যবহার করা হবে না!
-    আমরা Java-র নিজস্ব com.sun.net.httpserver.HttpServer ব্যবহার করব।
-    ============================================================================
--->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-    <!-- Maven POM মডেল ভার্সন — সবসময় 4.0.0 -->
     <modelVersion>4.0.0</modelVersion>
 
-    <!--
-        ====================================================================
-        প্রজেক্ট আইডেন্টিফিকেশন (Group ID, Artifact ID, Version)
-        ====================================================================
-        groupId    → প্রজেক্টের "পরিবার" বা organization (ডোমেইন নাম উল্টো করে লেখা হয়)
-        artifactId → প্রজেক্টের নাম (এটি JAR ফাইলের নাম হবে)
-        version    → প্রজেক্টের ভার্সন নম্বর
-        packaging  → আউটপুট ফরম্যাট (jar = executable Java archive)
-
-        এই তিনটি মিলে Maven-এর "coordinate system" তৈরি করে, যা
-        বিশ্বব্যাপী প্রতিটি Java লাইব্রেরিকে unique ভাবে চিহ্নিত করে।
-        ====================================================================
-    -->
     <groupId>com.bakir_khata</groupId>
     <artifactId>bakir-khata-api</artifactId>
     <version>1.0.0</version>
@@ -50,59 +18,14 @@
         Complete Java API (backend) — without any framework.
     </description>
 
-    <!--
-        ====================================================================
-        প্রপার্টিজ (Properties)
-        ====================================================================
-        এখানে পুনরায় ব্যবহারযোগ্য ভেরিয়েবল সেট করা হয়।
-        ${property.name} সিনট্যাক্স দিয়ে pom.xml-এর যেকোনো জায়গায় ব্যবহার করা যায়।
-
-        maven.compiler.source/target → Java 17 ব্যবহার করতে বলে।
-        project.build.sourceEncoding → ফাইল encoding UTF-8 সেট করে
-                                       (বাংলা/Unicode সাপোর্টের জন্য জরুরি)।
-        ====================================================================
-    -->
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!--
-        ====================================================================
-        DEPENDENCIES — বাহ্যিক লাইব্রেরি তালিকা
-        ====================================================================
-        Maven এই dependency গুলো Maven Central Repository (https://search.maven.org)
-        থেকে স্বয়ংক্রিয়ভাবে ডাউনলোড করে ~/.m2/repository ফোল্ডারে রাখে।
-
-        প্রতিটি dependency-র জন্য ৩টি তথ্য দরকার:
-          1. groupId    → কোন organization/কোম্পানির লাইব্রেরি
-          2. artifactId → লাইব্রেরির নাম
-          3. version    → কোন ভার্সন ব্যবহার করব
-        ====================================================================
-    -->
     <dependencies>
 
-        <!--
-            ================================================================
-            DEPENDENCY ১: MySQL Connector/J — JDBC ড্রাইভার
-            ================================================================
-            এটি কী করে?
-            Java-কে MySQL ডাটাবেসের সাথে "কথা বলতে" দেয়। Java-র নিজস্ব
-            java.sql.* প্যাকেজ একটি "interface" (চুক্তিপত্র) প্রদান করে,
-            কিন্তু প্রকৃত MySQL-এর সাথে যোগাযোগের "implementation" (বাস্তবায়ন)
-            এই ড্রাইভার সরবরাহ করে।
-
-            OOP ধারণা → Interface vs Implementation:
-            java.sql.Connection হলো interface (কী করতে হবে তার ছক)
-            com.mysql.cj.jdbc.ConnectionImpl হলো implementation (আসল কোড)
-            DriverManager.getConnection() কল করলে MySQL Connector/J
-            স্বয়ংক্রিয়ভাবে সঠিক implementation ক্লাস তৈরি করে দেয়।
-
-            runtime scope মানে: এই ড্রাইভার শুধু প্রোগ্রাম চলার সময় দরকার,
-            কোড কম্পাইল করতে দরকার নেই (কারণ আমরা java.sql.* interface ব্যবহার করি)।
-            ================================================================
-        -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
@@ -110,59 +33,18 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!--
-            ================================================================
-            DEPENDENCY ২: Gson — Google-এর JSON লাইব্রেরি
-            ================================================================
-            এটি কী করে?
-            JSON string কে Java object-এ রূপান্তর করে (deserialization),
-            এবং Java object কে JSON string-এ রূপান্তর করে (serialization)।
-
-            উদাহরণ:
-              JSON → Java: {"name":"রাজেশ"} → Map<String,String> {name=রাজেশ}
-              Java → JSON: Map {name=রাজেশ} → {"name":"রাজেশ"}
-
-            কেন Gson?
-            - সিম্পল API: new Gson().toJson(obj) / fromJson(str, Type)
-            - কোনো annotation বা configuration দরকার নেই
-            - Google দ্বারা রক্ষণাবেক্ষণ করা হয়, তাই নির্ভরযোগ্য
-            ================================================================
-        -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.11.0</version>
         </dependency>
 
-        <!--
-            ================================================================
-            DEPENDENCY ৩: jBCrypt — পাসওয়ার্ড হ্যাশিং
-            ================================================================
-            এটি কী করে?
-            BCrypt অ্যালগরিদম ব্যবহার করে পাসওয়ার্ডকে একটি irreversible
-            (অপরিবর্তনীয়) hash-এ রূপান্তর করে। এটি PHP-র password_hash()
-            এবং password_verify()-র সমতুল্য।
-
-            কেন BCrypt?
-            - ইচ্ছাকৃতভাবে ধীর (brute-force আক্রমণ কঠিন করে)
-            - স্বয়ংক্রিয় salt তৈরি করে (rainbow table আক্রমণ প্রতিরোধ)
-            - PHP-র bcrypt hash-এর সাথে সম্পূর্ণ compatible
-            ================================================================
-        -->
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
         </dependency>
 
-        <!--
-            ================================================================
-            DEPENDENCY ৪: javax.mail — ইমেইল পাঠানো
-            ================================================================
-            আমরা এখানে javax.mail লাইব্রেরি ব্যবহার করছি কারণ কোর জাভাতে ডিফল্টভাবে ইমেইল পাঠানোর কোনো 
-            বিল্ট-ইন সুবিধা নেই। এই লাইব্রেরিটি আমাদের SMTP প্রোটোকল ব্যবহার করে জিমেইল সার্ভারের সাথে 
-            যোগাযোগ করতে, মেইল সেশন তৈরি করতে এবং মেইল পাঠাতে সাহায্য করবে।
-        -->
         <dependency>
             <groupId>com.sun.mail</groupId>
             <artifactId>javax.mail</artifactId>
@@ -171,25 +53,9 @@
 
     </dependencies>
 
-    <!--
-        ====================================================================
-        BUILD কনফিগারেশন
-        ====================================================================
-        Maven-কে বলে দেওয়া হচ্ছে কীভাবে প্রজেক্ট build করতে হবে।
-
-        maven-jar-plugin → JAR ফাইলের Main-Class সেট করে, যাতে
-        `java -jar bakir-khata-api.jar` কমান্ডে সরাসরি চলে।
-
-        maven-dependency-plugin → সব dependency JAR ফাইলকে target/lib/
-        ফোল্ডারে কপি করে, যাতে প্রোগ্রাম চালাতে classpath-এ যোগ করা যায়।
-
-        maven-compiler-plugin → Java 17 feature (text blocks, records, ইত্যাদি)
-        ব্যবহার করতে কম্পাইলার ভার্সন নিশ্চিত করে।
-        ====================================================================
-    -->
     <build>
         <plugins>
-            <!-- JAR ফাইলে Main-Class সেট করা (entry point) -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -205,7 +71,6 @@
                 </configuration>
             </plugin>
 
-            <!-- সব dependency lib/ ফোল্ডারে কপি করা -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -224,7 +89,6 @@
                 </executions>
             </plugin>
 
-            <!-- Java 17 কম্পাইলার সেটিংস -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>

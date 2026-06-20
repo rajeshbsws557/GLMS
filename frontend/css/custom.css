@@ -1,13 +1,5 @@
-/* ============================================================================
-   custom.css — বাকির খাতা (সবুজ + সাদা থিম)
-   ============================================================================
-   সবুজ অ্যাকসেন্ট সহ হালকা থিম। বডি টেক্সটের জন্য Inter ব্যবহার করে।
-   Tailwind লেআউট পরিচালনা করে; এই ফাইলে কম্পোনেন্ট এবং টোকেনগুলো আছে।
-   ============================================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ---------- ডিজাইন টোকেন ---------- */
 :root {
     --bg-body: #f5f7f5;
     --bg-card: #ffffff;
@@ -28,7 +20,6 @@
     --white: #ffffff;
 }
 
-/* ---------- রিসেট / বেস ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -39,12 +30,10 @@ body {
     line-height: 1.5;
 }
 
-/* ---------- স্ক্রলবার ---------- */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
-/* ---------- ফর্ম কন্ট্রোল ---------- */
 .form-label {
     display: block;
     font-size: 0.82rem;
@@ -84,7 +73,6 @@ select.form-input option {
     color: var(--text-main);
 }
 
-/* ---------- বোতাম ---------- */
 .btn {
     display: inline-flex;
     align-items: center;
@@ -128,7 +116,6 @@ select.form-input option {
     padding: 0.35rem 0.75rem;
 }
 
-/* ---------- কার্ড ---------- */
 .card {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -141,7 +128,6 @@ select.form-input option {
     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
 
-/* ---------- হেডার ---------- */
 .app-header {
     background: var(--accent);
     color: var(--white);
@@ -159,7 +145,6 @@ select.form-input option {
     background: rgba(255,255,255,0.12);
 }
 
-/* ---------- auth পৃষ্ঠা ---------- */
 .auth-wrapper {
     min-height: 100vh;
     display: flex;
@@ -204,7 +189,6 @@ select.form-input option {
 }
 .auth-tab:hover:not(.active) { color: var(--text-dim); }
 
-/* ---------- মোডাল ---------- */
 .modal-overlay {
     position: fixed;
     inset: 0;
@@ -234,7 +218,6 @@ select.form-input option {
 }
 .modal-overlay.active .modal-box { transform: translateY(0); }
 
-/* ---------- স্ট্যাটাস ব্যাজ ---------- */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -250,7 +233,6 @@ select.form-input option {
 .badge-partial { background: #fffbeb; color: #d97706; }
 .badge-settled { background: #f0fdf4; color: #16a34a; }
 
-/* ---------- প্রগ্রেস বার ---------- */
 .progress-track {
     width: 100%;
     height: 4px;
@@ -265,7 +247,6 @@ select.form-input option {
     transition: width 0.4s ease;
 }
 
-/* ---------- লোন কার্ড অ্যাকসেন্ট স্ট্রাইপ ---------- */
 .loan-card { position: relative; padding-left: 1.35rem; }
 .loan-card::before {
     content: '';
@@ -277,11 +258,9 @@ select.form-input option {
 .loan-card.type-lent::before     { background: var(--green); }
 .loan-card.type-borrowed::before { background: var(--red); }
 
-/* ---------- সারসংক্ষেপ পরিসংখ্যান ---------- */
 .stat-value { font-size: 1.65rem; font-weight: 700; line-height: 1.2; }
 .stat-label { font-size: 0.78rem; color: var(--text-dim); }
 
-/* ---------- টোস্ট ---------- */
 .toast-wrap {
     position: fixed;
     top: 1rem;
@@ -320,7 +299,6 @@ select.form-input option {
     to   { opacity: 0; transform: translateX(40px); }
 }
 
-/* ---------- বিবিধ ---------- */
 .divider { border-top: 1px solid var(--border); }
 
 .empty-msg {
@@ -340,7 +318,6 @@ select.form-input option {
 }
 .repayment-row:last-child { border-bottom: none; }
 
-/* ---------- রেসপন্সিভ ---------- */
 @media (max-width: 640px) {
     .auth-box { padding: 1.5rem; }
     .modal-box { padding: 1.25rem; width: 95%; }

@@ -1,25 +1,5 @@
 <!DOCTYPE html>
-<!--
-============================================================================
-ফাইল: index.html — লগইন ও রেজিস্ট্রেশন পৃষ্ঠা
-============================================================================
 
-উদ্দেশ্য:
-অ্যাপ্লিকেশনের প্রবেশ বিন্দু। একটি কেন্দ্রীভূত কার্ডের মধ্যে লগইন এবং
-রেজিস্ট্রেশন ফর্ম প্রদান করে। ব্যবহারকারীরা ড্যাশবোর্ডে প্রবেশের আগে
-এখানে প্রমাণীকরণ (authenticate) করে।
-
-প্রযুক্তি:
-- Tailwind CSS v3 (CDN) — স্পেসিং, ফ্লেক্স, টাইপোগ্রাফির জন্য utility ক্লাস
-- custom.css — সবুজ+সাদা থিম ভেরিয়েবল, ফর্ম কন্ট্রোল, auth-নির্দিষ্ট স্টাইল
-- auth.js — ফর্ম হ্যান্ডলিং (fetch + localStorage)
-- config.js — API বেস URL
-
-ভাইভা নোট:
-লগইন এবং রেজিস্ট্রেশন দুটোই একই পৃষ্ঠায় আছে, JS দিয়ে টগল করা হয়।
-এতে পুরো পৃষ্ঠা রিলোড এড়ানো যায় এবং আরও মসৃণ অভিজ্ঞতা দেয়।
-============================================================================
--->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -27,23 +7,19 @@
     <meta name="description" content="Bakir Khata — Track money lent and borrowed with friends and family.">
     <title>Bakir Khata — Sign In</title>
 
-    <!-- Tailwind CSS (Play CDN — রানটাইম, ডেমোর জন্য ঠিক আছে) -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- কাস্টম সবুজ+সাদা থিম + কম্পোনেন্ট -->
+
     <link rel="stylesheet" href="css/custom.css">
-    <!-- সাধারণ টেক্সট ফেভিকন -->
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>$</text></svg>">
 </head>
 <body>
 
-    <!-- টোস্ট কন্টেইনার (JS দ্বারা পূরণ হয়) -->
     <div id="toast-container" class="toast-wrap"></div>
 
-    <!-- কেন্দ্রীভূত auth কার্ড -->
     <div class="auth-wrapper">
         <div class="auth-box">
 
-            <!-- শিরোনাম -->
             <div class="text-center mb-6">
                 <h1 class="text-2xl font-bold tracking-tight" style="color:var(--accent)">Bakir Khata</h1>
                 <p class="text-sm mt-1" style="color:var(--text-dim)">
@@ -51,7 +27,6 @@
                 </p>
             </div>
 
-            <!-- ট্যাব -->
             <div class="auth-tabs">
                 <button id="tab-login" class="auth-tab active" onclick="switchTab('login')">
                     Sign In
@@ -61,18 +36,6 @@
                 </button>
             </div>
 
-            <!-- ============================================================
-                 লগইন ফর্ম
-                 ============================================================
-                 onsubmit="return handleLogin(event)" আমাদের JS হ্যান্ডলার
-                 কল করে এবং ডিফল্ট পৃষ্ঠা-রিলোডিং ফর্ম সাবমিশন প্রতিরোধ করে।
-
-                 প্রতিটি input ব্যবহার করে:
-                 - id: যাতে JS getElementById দিয়ে মান পেতে পারে
-                 - type: ব্রাউজারকে বলে কোন ধরনের ডেটা প্রত্যাশিত
-                 - required: HTML5 ভ্যালিডেশন গেট
-                 - autocomplete: ব্রাউজারকে সংরক্ষিত credential সাজেস্ট করতে দেয়
-                 ============================================================ -->
             <form id="form-login" onsubmit="return handleLogin(event)">
                 <div class="mb-4">
                     <label for="login-email" class="form-label">Email</label>
@@ -101,9 +64,6 @@
                 </button>
             </form>
 
-            <!-- ============================================================
-                 রেজিস্ট্রেশন ফর্ম (ডিফল্টে লুকানো)
-                 ============================================================ -->
             <form id="form-register" style="display:none" onsubmit="return handleRegister(event)">
                 <div class="mb-4">
                     <label for="reg-name" class="form-label">Full Name</label>
@@ -162,7 +122,6 @@
         </div>
     </div>
 
-    <!-- JS: প্রথমে config (API_BASE_URL সংজ্ঞায়িত করে), তারপর auth লজিক -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
 </body>

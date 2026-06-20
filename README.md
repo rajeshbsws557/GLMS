@@ -29,7 +29,7 @@ A full-stack web application for tracking informal loans between friends and fam
 | **Backend** | Java 17+ (No frameworks, pure `com.sun.net.httpserver.HttpServer`) |
 | **Database** | MySQL 8+ with JDBC (`java.sql.*`) |
 | **Auth** | Bcrypt password hashing via `jbcrypt` |
-| **Build/Dependencies**| Maven (`mysql-connector-j`, `gson`, `jbcrypt`) |
+| **Build/Dependencies**| Maven (`mysql-connector-j`, `gson`, `jbcrypt`, `javax.mail`) |
 
 ---
 
@@ -52,12 +52,15 @@ GLMS/
 │   └── src/main/java/com/bakir_khata/
 │       ├── Main.java               # HttpServer setup and routing
 │       ├── DatabaseHelper.java     # JDBC connection pooling (Singleton)
-│       └── handlers/
-│           ├── CorsUtil.java       # CORS headers and JSON responses
-│           ├── AuthHandler.java    # POST — register / login
-│           ├── ContactHandler.java # GET / POST — manage contacts
-│           ├── LoanHandler.java    # GET / POST — manage loans
-│           └── RepaymentHandler.java # GET / POST — log repayments (transactional)
+│       ├── handlers/
+│       │   ├── CorsUtil.java       # CORS headers and JSON responses
+│       │   ├── AuthHandler.java    # POST — register / login
+│       │   ├── ContactHandler.java # GET / POST / PUT / DELETE — manage contacts
+│       │   ├── LoanHandler.java    # GET / POST / DELETE — manage loans
+│       │   └── RepaymentHandler.java # GET / POST — log repayments (transactional)
+│       └── services/
+│           ├── NotificationService.java # SMTP email connection utility
+│           └── DueLoanNotifier.java     # Cron job daemon for due loan emails
 │
 ├── schema.sql              # Full database schema (CREATE DATABASE + 4 tables)
 └── README.md

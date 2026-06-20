@@ -46,8 +46,8 @@
 
     <name>Bakir Khata — Java REST API</name>
     <description>
-        ব্যক্তিগত ধার-পাওনা হিসাবের খাতা (Personal IOU Ledger)।
-        PHP API-র সম্পূর্ণ Java রূপান্তর — কোনো ফ্রেমওয়ার্ক ছাড়া।
+        Personal IOU Ledger (Personal Lending and Borrowing Ledger Management System)।
+        Complete Java API (backend) — without any framework.
     </description>
 
     <!--
@@ -153,6 +153,20 @@
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
+        </dependency>
+
+        <!--
+            ================================================================
+            DEPENDENCY ৪: javax.mail — ইমেইল পাঠানো
+            ================================================================
+            আমরা এখানে javax.mail লাইব্রেরি ব্যবহার করছি কারণ কোর জাভাতে ডিফল্টভাবে ইমেইল পাঠানোর কোনো 
+            বিল্ট-ইন সুবিধা নেই। এই লাইব্রেরিটি আমাদের SMTP প্রোটোকল ব্যবহার করে জিমেইল সার্ভারের সাথে 
+            যোগাযোগ করতে, মেইল সেশন তৈরি করতে এবং মেইল পাঠাতে সাহায্য করবে।
+        -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.2</version>
         </dependency>
 
     </dependencies>

@@ -59,6 +59,12 @@ import com.bakir_khata.handlers.ContactHandler;
 import com.bakir_khata.handlers.LoanHandler;
 import com.bakir_khata.handlers.RepaymentHandler;
 
+// শিডিউলার ক্লাসগুলো ইম্পোর্ট
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import com.bakir_khata.services.DueLoanNotifier;
+
 /**
  * Main ক্লাস — অ্যাপ্লিকেশনের প্রবেশ বিন্দু।
  *
@@ -175,11 +181,31 @@ public class Main {
         // null সেট করলে Java ডিফল্ট threading ব্যবহার করে — প্রতিটি
         // request-এর জন্য একটি নতুন thread তৈরি হয়। ছোট প্রজেক্টের
         // জন্য এটি যথেষ্ট।
-        //
         // বড় প্রজেক্টে ExecutorService ব্যবহার করা হয় thread pool-এর
         // জন্য, যাতে thread তৈরি/ধ্বংসের overhead কমে।
         // ====================================================================
         server.setExecutor(null);
+
+        // ====================================================================
+        // ধাপ ৪.৫: ব্যাকগ্রাউন্ড শিডিউলার তৈরি এবং ইমেইল নোটিফিকেশন টাস্ক সেটআপ
+        // ====================================================================
+        // ১. ব্যাকগ্রাউন্ড থ্রেড (Background Thread) তৈরি:
+        // ScheduledExecutorService আমাদের জন্য একটি বিশেষ থ্রেড পুল তৈরি করে।
+        // এটি মূল সার্ভারের কাজের ব্যাঘাত না ঘটিয়ে, পেছনের সারিতে (ব্যাকগ্রাউন্ডে)
+        // স্বাধীনভাবে নির্দিষ্ট সময় পরপর কাজ করতে পারে।
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+
+        // ২. টাস্ক শিডিউল করা (scheduleAtFixedRate):
+        // এই মেথডটি একটি নির্দিষ্ট কাজকে (Runnable task) বারবার নির্দিষ্ট সময় অন্তর
+        // চালানোর জন্য ব্যবহৃত হয়।
+        // এখানে কাজ শুরু হওয়ার প্রাথমিক বিলম্ব (initial delay) ০ দেওয়া হয়েছে, যার মানে
+        // হলো সার্ভার চালুর সাথেই একবার কাজ করবে,
+        // এবং প্রতি ২৪ ঘণ্টা পরপর (period: 24, unit: TimeUnit.HOURS) এটি স্বয়ংক্রিয়ভাবে
+        // চলতে থাকবে।
+        scheduler.scheduleAtFixedRate(() -> {
+            System.out.println("Starting to check for due loans...");
+            DueLoanNotifier.checkAndSendDueNotifications();
+        }, 0, 30, TimeUnit.SECONDS); // 30 seconds interval for testing
 
         // ====================================================================
         // ধাপ ৫: সার্ভার শুরু!
